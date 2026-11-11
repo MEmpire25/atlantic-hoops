@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Atlantic Hoops | Player stats</title>
+<link rel="icon" href="data:,">   <!-- no logo, so an empty icon keeps the browser asking for /favicon.ico -->
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
+</head>
+<body class="filters-closed">
+<header class="top">
+  <a class="wordmark" href="index.html" aria-label="Atlantic Hoops home">Atlantic <b>Hoops</b></a>
+  <nav aria-label="Site">
+    <a href="index.html" aria-current="page">Stats</a>
+    <a href="glossary.html">Glossary</a>
+    <a href="https://atlantichoops.substack.com/" target="_blank" rel="noopener">Substack &#8599;</a>
+    <button id="theme" class="btn" type="button">Light theme</button>
+  </nav>
+</header>
+
+<div class="tabbar">
+  <div id="tabs" role="tablist" aria-label="Stat categories"></div>
+  <label class="tabsel"><span>Category</span><select id="tab-select" aria-label="Stat category"></select></label>
+  <button type="button" class="filters-btn" id="filters-btn" aria-expanded="false" aria-controls="toolbar">Filters</button>
+</div>
+
+<section class="toolbar" id="toolbar" aria-label="Season and filters">
+  <div class="fld"><span id="label-type">Season type</span>
+    <div class="seg" role="group" aria-labelledby="label-type">
+      <button type="button" id="type-rs" data-type="rs" aria-pressed="true">Regular Season</button>
+      <button type="button" id="type-po" data-type="po" aria-pressed="false">Playoffs</button>
+    </div></div>
+  <label class="fld"><span>Season</span><select id="season"></select></label>
+  <label class="fld filter-field" data-filter="search"><span>Player</span><input id="f-q" type="search" placeholder="Search name" autocomplete="off"></label>
+  <label class="fld filter-field" data-filter="pos"><span>Pos</span><select id="f-pos"></select></label>
+  <label class="fld filter-field" data-filter="team"><span>Team</span><select id="f-team"></select></label>
+  <label class="fld filter-field" data-filter="minMp"><span>Min MP <small id="mp-hint"></small></span><input id="f-mp" type="number" inputmode="numeric" step="1"></label>
+  <label class="fld filter-field" data-filter="minGp"><span>Min GP</span><input id="f-gp" type="number" inputmode="numeric" step="1" min="0"></label>
+  <div class="fld filter-field" data-filter="age" role="group" aria-label="Age range"><span>Age</span>
+    <span class="pair"><input id="f-age-min" type="number" inputmode="numeric" min="0" aria-label="Minimum age"><span aria-hidden="true">&ndash;</span><input id="f-age-max" type="number" inputmode="numeric" min="0" aria-label="Maximum age"></span></div>
+  <button type="button" class="btn filter-field" data-reset>Reset</button>
+  <div class="picker-wrap">
+    <button type="button" class="btn" id="picker-btn" aria-expanded="false" aria-controls="picker">Columns</button>
+    <div id="picker" role="group" aria-label="Choose columns for this tab" hidden>
+      <div class="pk-actions">
+        <button type="button" data-pick-action="default">Default</button>
+        <button type="button" data-pick-action="all">All</button>
+        <button type="button" data-pick-action="none">None</button>
+      </div>
+      <div id="picker-body"></div>
+    </div>
+  </div>
+</section>
+
+<div id="chips" class="chips" aria-label="Active filters"></div>
+<div id="notice" class="notice" role="status" hidden></div>
+<div class="meta">
+  <span id="count" aria-live="polite"></span>
+  <span class="legend">Rank among rows shown:
+    <span class="rank r1">top</span><span class="rank r2">upper</span><span class="rank r3">middle</span><span class="rank r4">lower</span><span class="rank r5">bottom</span>
+    <span class="muted">&nbsp;&middot; no color = not ranked</span></span>
+</div>
+
+<div id="panel" role="tabpanel">
+  <div id="table-wrap" class="table-wrap" tabindex="0" aria-label="Player stats table (scrolls sideways)"><table id="grid"></table></div>
+  <div id="state-panel" hidden></div>
+</div>
+
+<footer>
+  <div id="credits" hidden></div>
+</footer>
+<div id="tip" role="region" aria-label="Column help" hidden></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

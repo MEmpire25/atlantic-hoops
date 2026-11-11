@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Atlantic Hoops | Glossary</title>
+<link rel="icon" href="data:,">   <!-- no logo, so an empty icon keeps the browser asking for /favicon.ico -->
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="wordmark" href="index.html" aria-label="Atlantic Hoops home">Atlantic <b>Hoops</b></a>
+  <nav aria-label="Site">
+    <a href="index.html">Stats</a>
+    <a href="glossary.html" aria-current="page">Glossary</a>
+    <a href="https://atlantichoops.substack.com/" target="_blank" rel="noopener">Substack &#8599;</a>
+    <button id="theme" class="btn" type="button">Light theme</button>
+  </nav>
+</header>
+
+<main class="glossary" id="glossary">
+  <h1>Glossary</h1>
+  <p>What the columns mean, grouped like the tabs on the stats page. Each column header on the stats page links here.</p>
+  <ul class="section-nav" id="section-nav" aria-label="Sections"></ul>
+  <div id="sections">Loading…</div>
+</main>
+
+<script type="module" src="js/glossary-page.js"></script>
+</body>
+</html>

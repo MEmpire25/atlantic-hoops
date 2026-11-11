@@ -1,0 +1,96 @@
+/* Style tokens for the whole site: every color, font size, spacing and table size lives here.
+   Change a value here and both pages follow. site.css only uses these names and holds no raw colors or sizes.
+   Soft orange + middle gray, with a blue -> gray -> rose rank scale. */
+
+/* ---------- colors: dark theme (default) ---------- */
+:root,
+html[data-theme="dark"] {
+  --bg: #141517;
+  --panel: #1B1C1F;
+  --row: #141517;
+  --line: #2A2C31;          /* decorative dividers only */
+  --ctl: #6B6F76;           /* borders of inputs and buttons (needs 3:1) */
+  --hover: #24262B;
+  --sorted: #241F1D;        /* cells of the sorted column */
+  --text: #E9E6E1;
+  --text2: #A9ACB2;
+  --text3: #8C9097;         /* middle gray: units, blanks, dimmed text */
+  --accent: #F2A365;        /* text-safe orange: links, chips, banner */
+  --accent-fill: #F2A365;   /* soft orange fill (pressed toggle) */
+  --ink: #1A1109;           /* text on --accent-fill */
+  --err: #FF5C7A;
+  --shadow: 0 8px 24px rgba(0, 0, 0, .45);
+
+  /* rank scale, best (1) to worst (5) */
+  --r1: #5CB0FF;
+  --r2: #9CC7EE;
+  --r3: #8C9097;
+  --r4: #F0A0B0;
+  --r5: #FF5C7A;
+}
+
+/* ---------- colors: light theme ---------- */
+html[data-theme="light"] {
+  --bg: #FAF8F5;
+  --panel: #FFFFFF;
+  --row: #FFFFFF;
+  --line: #E3DFD9;
+  --ctl: #858992;
+  --hover: #F0EDE8;
+  --sorted: #F8EEE6;
+  --text: #1F1D1A;
+  --text2: #55585E;
+  --text3: #666A71;
+  --accent: #A94E0B;
+  --accent-fill: #F2A365;
+  --ink: #1A1109;
+  --err: #B3003B;
+  --shadow: 0 8px 24px rgba(60, 40, 20, .18);
+
+  --r1: #0D47A1;
+  --r2: #35699A;
+  --r3: #666A71;
+  --r4: #B0455A;
+  --r5: #B3003B;
+}
+
+/* ---------- type ---------- */
+:root {
+  --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-wordmark: 19px;
+  --fs-panel-title: 15px;
+  --fs-body: 13px;
+  --fs-phone-control: 14px;
+  --fs-note: 12px;          /* notices, chips, count line */
+  --fs-label: 11px;         /* field labels */
+  --fs-value: 11.5px;       /* table values */
+  --fs-head: 10.5px;        /* column headers */
+  --fs-rank: 9.5px;         /* rank numbers, credit tags, sort arrows */
+  --fs-info-glyph: 8px;     /* the "i" inside the header info button */
+}
+
+/* ---------- spacing and sizes ---------- */
+:root {
+  --gutter: 12px;
+  --gutter-phone: 6px;
+  --control-height: 28px;
+  --phone-control-height: 36px;
+  --radius: 6px;
+  --radius-small: 5px;
+
+  /* table density. JS reads the numbers below to size the columns; keep them plain px values. */
+  --cell-pad-x: 2px;
+  --cell-pad-y: 3px;
+  --head-pad-y: 4px;
+  --player-pad-left: 6px;
+  --rank-gap: 2px;
+  --player-width-min: 112px;
+  --player-width-max: 140px;
+  --player-width-phone: 100px;
+  --head-word-max: 60px;    /* longer header words hyphenate */
+  --group-row-height: 22px; /* banner row above grouped columns */
+  --table-max-height: 76vh;
+  --table-max-height-phone-collapsed: 84vh;
+  --tooltip-width: 260px;
+  --picker-width: 290px;
+}
