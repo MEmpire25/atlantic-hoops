@@ -84,10 +84,9 @@ html[data-theme="light"] {
   --head-pad-y: 4px;
   --player-pad-left: 6px;
   --rank-gap: 2px;
-  --player-width-min: 112px;
-  --player-width-max: 140px;
   --player-width-phone: 100px;
-  --head-word-max: 60px;    /* longer header words hyphenate */
+  --sort-arrow-gap: 2px;    /* space between a header's sort arrow and its "i" button */
+  --info-size: 12px;        /* the "i" button in a header */
   --group-row-height: 22px; /* banner row above grouped columns */
   --table-max-height: 76vh;
   --table-max-height-phone-collapsed: 84vh;

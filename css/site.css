@@ -94,17 +94,20 @@ thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); paddi
 table.has-group thead tr:nth-child(2) th { top: var(--group-row-height); }
 thead th.group { height: var(--group-row-height); padding: 0 6px; text-align: left; color: var(--accent); font-size: var(--fs-label); letter-spacing: .02em; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--line); }
 thead th.group-blank { height: var(--group-row-height); padding: 0; border-bottom: 0; }
-.th-in { display: block; max-width: 100%; text-align: right; }   /* the name and the "i" flow as text so a long name wraps instead of widening the column */
-.sort { display: inline; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: right; cursor: pointer; overflow-wrap: anywhere; hyphens: auto; }
+.th-in { display: block; max-width: 100%; text-align: right; }   /* the name wraps at its break points; the tools line (arrow slot, "i") sits below */
+.sort { display: inline; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: right; cursor: pointer; }
+.th-tools { display: flex; justify-content: flex-end; align-items: center; gap: var(--sort-arrow-gap); height: var(--info-size); margin-top: 1px; }
+.arrow::after { content: "\25B2"; font-size: var(--fs-rank); line-height: 1; visibility: hidden; }   /* the slot is always taken, so sorting never changes the header's height */
 .sort:hover { color: var(--text); }
 th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--text); }
-th[aria-sort="ascending"] .arrow::after { content: " \25B2"; font-size: var(--fs-rank); }
-th[aria-sort="descending"] .arrow::after { content: " \25BC"; font-size: var(--fs-rank); }
-.info { display: inline-block; vertical-align: -1px; margin-left: 2px; width: 12px; height: 12px; padding: 0; border: 1px solid var(--text3); border-radius: 50%; background: none; color: var(--text3); font-size: var(--fs-info-glyph); line-height: 9px; cursor: pointer; }
+th[aria-sort="ascending"] .arrow::after { visibility: visible; }
+th[aria-sort="descending"] .arrow::after { content: "\25BC"; visibility: visible; }
+.info { flex: none; width: var(--info-size); height: var(--info-size); padding: 0; border: 1px solid var(--text3); border-radius: 50%; background: none; color: var(--text3); font-size: var(--fs-info-glyph); line-height: 9px; cursor: pointer; }
 .info:hover, .info[aria-expanded="true"] { color: var(--text); border-color: var(--text); }
 .credit-tag { display: block; margin-top: 1px; font-size: var(--fs-rank); font-weight: 700; letter-spacing: .05em; color: var(--accent); text-align: right; }
 th.txt, td.txt { text-align: center; }
 th.txt .th-in { text-align: center; }
+th.txt .th-tools { justify-content: center; }
 td.num { text-align: right; white-space: nowrap; }
 .player { position: sticky; left: 0; z-index: 2; text-align: left !important; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: var(--player-pad-left); border-right: 1px solid var(--line); }
 thead th.player { z-index: 5; }

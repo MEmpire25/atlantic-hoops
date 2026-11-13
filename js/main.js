@@ -49,6 +49,7 @@ let season = null;         // the season file on screen; null while loading or a
 let status = 'loading';    // loading | ready | error (for the test hook)
 let emptyKeys = new Set(); // columns with no data in this season
 let shownRows = [];        // indexes passing the filters, source order
+let rankPoolRows = [];     // indexes the ranks are computed over (see rankPool)
 let view = null;           // what the table currently shows, null while a message panel is shown
 let latestRequest = 0;
 let retryRequest = null;
@@ -133,10 +134,18 @@ function resetTableScroll() {
 function renderResults() {
   if (!season) return;   // a control was used before the first season file arrived
   shownRows = filterRows(season, state.filters);
+  rankPoolRows = rankPool();
   renderFilterState();
   renderNotice();
   renderMain();
   renderCredits();
+}
+
+// While a name is searched, ranks are computed over the default view: no filters, so the season file's own
+// minutes floor and every position, team and age. A searched player keeps their real league rank instead of "1 of 1",
+// whatever other filters are set. With no name searched, the pool is the shown rows.
+function rankPool() {
+  return state.filters.search.trim() ? filterRows(season, emptyFilters()) : shownRows;
 }
 
 function syncSeasonControls() {
@@ -175,6 +184,9 @@ function renderFilterState() {
   const filtersButton = $('filters-btn');
   filtersButton.textContent = `Filters${names.length ? ` (${names.length})` : ''}`;
   filtersButton.classList.toggle('is-set', names.length > 0);
+
+  // The legend says which players the ranks are over (see rankPool).
+  $('legend-label').textContent = names.includes('search') ? 'Rank among all players this season (name search):' : 'Rank among rows shown:';
 
   const plural = names.length > 1 ? 's' : '';
   $('count').innerHTML = `<b>${shownRows.length}</b> of ${season.n} players` +
@@ -218,7 +230,7 @@ function renderTable(tab) {
   ensureSortColumn(columns);
 
   const rows = sortRows(shownRows, season, columnsByKey.get(state.sort.key), state.sort.direction);
-  const rankTables = buildRankTables(columns, season, shownRows);
+  const rankTables = buildRankTables(columns, season, rankPoolRows);
   view = { columns, season, rows, rankTables, sort: state.sort, bannerTitles, glossary };
 
   const { hasBanner, html } = tableHtml(view);
@@ -454,12 +466,12 @@ function installTestHook() {
     pickColumns,
     visibleRows: () => (view ? view.rows.map((row) => season.id[row]) : []),
     visibleColumns: () => (view ? view.columns.map((column) => column.key) : []),
-    rankOf: (entityId, key) => {   // works for any column of the season file, shown or not
+    rankOf: (entityId, key) => {   // works for any column of the season file, shown or not; the rank is over the rank pool
       const row = season.id.indexOf(entityId);
       const column = columnsByKey.get(key);
       const value = season.cols[key][row];
       if (!shownRows.includes(row) || column.rank === 'none' || column.format === 'text' || value === null) return null;
-      return lookupRank(buildRankTable(season.cols[key], shownRows, column.rank), value);
+      return lookupRank(buildRankTable(season.cols[key], rankPoolRows, column.rank), value);
     },
     state: () => ({
       type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen,

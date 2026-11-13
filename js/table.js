@@ -23,18 +23,24 @@ export function cellText(season, row, column) {
   return column.format === 'text' ? value : formatValue(value, column);
 }
 
-// Header words may wrap at a capital letter, "/" or ":" ("OnORtg" -> "On" "ORtg"). The column fitter measures the
-// longest of these words, so it must split names exactly like the header does.
-const BREAK_POINTS = /([a-z]{2})([A-Z])|([/:])/g;
-
-export function headerWords(name) {
-  return name.replace(/([a-z]{2})([A-Z])/g, '$1 $2').replace(/([/:])/g, '$1 ').split(/\s+/);
+// A header name may wrap after a space, a capital letter that follows two lowercase letters, "/" or ":"
+// ("OnORtg" -> "On" "ORtg"). The pieces keep their spaces, so joining them gives back the name. The column fitter
+// measures the same pieces, so it must split names exactly like the header does.
+export function headerPieces(name) {
+  return name.replace(/([a-z]{2})(?=[A-Z])|[/:]|\s/g, (breakPoint) => `${breakPoint}\u0000`).split('\u0000').filter((piece) => piece !== '');
 }
 
 function headerNameHtml(name) {
-  return escapeHtml(name).replace(BREAK_POINTS, (match, before, after, separator) => (
-    separator ? `${separator}<wbr>` : `${before}<wbr>${after}`
-  ));
+  return headerPieces(name).map(escapeHtml).join('<wbr>');
+}
+
+// Source tag under a third-party column's header. When any shown column has one, the others get an empty tag line, so
+// all names and tools lines in the row line up.
+function creditTagHtml(column, view) {
+  if (column.source) {
+    return `<span class="credit-tag" title="Source: ${escapeHtml(column.source)}">${escapeHtml(sourceTag(column.source))}</span>`;
+  }
+  return view.columns.some((shown) => shown.source) ? '<span class="credit-tag" aria-hidden="true">&nbsp;</span>' : '';
 }
 
 function headerCellHtml(column, view) {
@@ -45,13 +51,13 @@ function headerCellHtml(column, view) {
   const infoButton = hasTooltip
     ? `<button type="button" class="info" data-info="${escapeHtml(column.key)}" aria-label="About ${escapeHtml(column.name)}" aria-expanded="false">i</button>`
     : '';
-  const creditTag = column.source
-    ? `<span class="credit-tag" title="Source: ${escapeHtml(column.source)}">${escapeHtml(sourceTag(column.source))}</span>`
-    : '';
 
+  // Under the name every header has the same tools line: the sort arrow's slot, then the info button. The slot is
+  // always there (the arrow is only hidden until the column is sorted), so sorting never changes how a header wraps,
+  // and headers in a row line up at the bottom.
   return `<th scope="col" class="${classes}" data-key="${escapeHtml(column.key)}" aria-sort="${ariaSort}"><div class="th-in">` +
-    `<button type="button" class="sort" data-sort="${escapeHtml(column.key)}">${headerNameHtml(column.name)}<span class="arrow" aria-hidden="true"></span></button>` +
-    `${infoButton}</div>${creditTag}</th>`;
+    `<button type="button" class="sort" data-sort="${escapeHtml(column.key)}">${headerNameHtml(column.name)}</button></div>` +
+    `<div class="th-tools"><span class="arrow" aria-hidden="true"></span>${infoButton}</div>${creditTagHtml(column, view)}</th>`;
 }
 
 // Banner row above runs of grouped columns. The frozen Player cell must stay a single cell, so a blank run that
@@ -83,7 +89,7 @@ function bannerRowHtml(view) {
 
 function rankHtml(rankTable, value) {
   const rank = lookupRank(rankTable, value);
-  return `<span class="rank r${colorStep(rank, rankTable.total)}" title="Rank ${rank} of ${rankTable.total} shown">${rank}</span>`;
+  return `<span class="rank r${colorStep(rank, rankTable.total)}" title="Rank ${rank} of ${rankTable.total}">${rank}</span>`;
 }
 
 function cellHtml(row, column, view) {
