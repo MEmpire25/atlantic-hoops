@@ -6,8 +6,8 @@
 //
 // Widths are measured on real hidden spans that use the table's own fonts, so nothing is guessed: digits are the same
 // width in the table (tabular numbers), so every distinct value "shape" (digits replaced by 0) is measured once.
-import { cellText, headerPieces } from './table.js';
-import { escapeHtml } from './text.js';
+import { cellText, headerPieces } from './table.js?v=dece3f1832';
+import { escapeHtml } from './text.js?v=dece3f1832';
 
 const CANDIDATE_TEXT_LIMIT = 10;   // text columns: only the longest few strings can be the widest
 const SAFETY_PIXELS = 1;           // absorbs sub-pixel rounding
@@ -75,14 +75,9 @@ function rankGap(view) {
   return cssPixels(view.rankMode === 'percentile' ? '--chip-gap' : '--rank-gap');
 }
 
-// Width of the tools line under a header name: the sort arrow's slot, a gap, and the "i" button. Both arrow glyphs
-// have the same width.
-function headerToolsWidth() {
-  return measureTexts([{ text: '\u25B2', kind: 'rank' }])[0] + cssPixels('--sort-arrow-gap') + cssPixels('--info-size');
-}
-
-// Narrowest width at which a header name fits on two lines or fewer. Without this, a narrow number column would wrap
-// a name like "PullUp 3PA/75" onto three lines and push its label out of line with its neighbours.
+// Narrowest width at which a header name fits on two lines or fewer (the "i" button sits beside it when there is room, else
+// below it, so it does not widen the column). Without this, a narrow number column would wrap a name like "PullUp 3PA/75" onto
+// three lines and push its label out of line with its neighbours.
 function headerNameWidth(name) {
   const pieces = headerPieces(name);
   const lines = [];   // for every place to break the name, the text of the first line and of the second line
@@ -108,7 +103,7 @@ function naturalWidths(view, isPhone, rankSlots) {
 
   const widestValue = view.columns.map(() => 0);
   measureTexts(entries).forEach((width, i) => { widestValue[owners[i]] = Math.max(widestValue[owners[i]], width); });
-  const toolsWidth = headerToolsWidth();
+  const infoWidth = cssPixels('--info-size');
 
   const gap = rankGap(view);
   return view.columns.map((column, index) => {
@@ -119,7 +114,7 @@ function naturalWidths(view, isPhone, rankSlots) {
       return Math.ceil(widestValue[index] + padLeft + cssPixels('--cell-pad-x') + SAFETY_PIXELS);
     }
     const valueWidth = widestValue[index] + (view.rankTables.has(column.key) ? gap + rankSlots.get(view.rankDigits.get(column.key)) : 0);
-    return Math.ceil(Math.max(valueWidth, headerNameWidth(column.name), toolsWidth) + cellPadding);
+    return Math.ceil(Math.max(valueWidth, headerNameWidth(column.name), view.glossary.entries[column.key]?.tooltip ? infoWidth : 0) + cellPadding);
   });
 }
 

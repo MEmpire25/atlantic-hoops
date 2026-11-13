@@ -1,22 +1,22 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js';
-import { naturalSortDirection, sortRows } from './sorting.js';
+import { loadManifest, loadGlossary, loadSeason } from './data.js?v=dece3f1832';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=dece3f1832';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=dece3f1832';
+import { naturalSortDirection, sortRows } from './sorting.js?v=dece3f1832';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js';
-import { rowsOfSelected, namesNotInSeason } from './compare.js';
-import { tableHtml } from './table.js';
-import { fitColumns } from './measure.js';
-import { buildTabs, updateTabs } from './tabs.js';
-import { pickerHtml, pickerLabel } from './picker.js';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js';
-import { setUpTooltip } from './tooltip.js';
-import { escapeHtml } from './text.js';
+} from './columns.js?v=dece3f1832';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=dece3f1832';
+import { tableHtml } from './table.js?v=dece3f1832';
+import { fitColumns } from './measure.js?v=dece3f1832';
+import { buildTabs, updateTabs } from './tabs.js?v=dece3f1832';
+import { pickerHtml, pickerLabel } from './picker.js?v=dece3f1832';
+import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=dece3f1832';
+import { setUpTooltip } from './tooltip.js?v=dece3f1832';
+import { escapeHtml } from './text.js?v=dece3f1832';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
@@ -219,10 +219,10 @@ function renderFilterState() {
     (active.length ? ` &middot; ${active.join(' &middot; ')} <button type="button" class="link" data-reset>Reset</button>` : '');
 }
 
-// The Compare button: needs two ticked players to start, and always works as "Exit compare" while the compare view is on.
+// The Compare button: needs two ticked players to start, and always works as "Show all" while the compare view is on.
 function renderCompareControls() {
   const button = $('compare-btn');
-  button.textContent = state.compare ? 'Exit compare' : `Compare (${state.selected.size})`;
+  button.textContent = state.compare ? 'Show all' : `Compare (${state.selected.size})`;
   button.disabled = !state.compare && state.selected.size < 2;
   button.classList.toggle('is-on', state.compare);
   button.title = state.compare ? 'Back to the full table (your ticks are kept)' : 'Tick at least 2 players to compare';

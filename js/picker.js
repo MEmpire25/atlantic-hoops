@@ -1,6 +1,6 @@
 // The "Columns" picker of the active tab: one checkbox per column of the tab, defaults come from the manifest.
-import { escapeHtml } from './text.js';
-import { sourceTag } from './columns.js';
+import { escapeHtml } from './text.js?v=dece3f1832';
+import { sourceTag } from './columns.js?v=dece3f1832';
 
 // Columns with no data this season are listed but disabled, so the visitor can see why they are missing.
 export function pickerHtml(tab, picks, emptyKeys, columnsByKey, bannerTitles) {

@@ -12,10 +12,10 @@
 //   bannerTitles: Map key -> banner title (groups of columns, e.g. "1-Year RAPM Measures"),
 //   glossary:     the glossary file (only its tooltips are used here, to decide where the "i" button goes)
 // }
-import { escapeHtml } from './text.js';
-import { formatValue } from './format.js';
-import { colorStep, shownNumber } from './ranks.js';
-import { sourceTag } from './columns.js';
+import { escapeHtml } from './text.js?v=dece3f1832';
+import { formatValue } from './format.js?v=dece3f1832';
+import { colorStep, shownNumber } from './ranks.js?v=dece3f1832';
+import { sourceTag } from './columns.js?v=dece3f1832';
 
 const BLANK_MARK = '–';
 
@@ -55,12 +55,12 @@ function headerCellHtml(column, view) {
     ? `<button type="button" class="info" data-info="${escapeHtml(column.key)}" aria-label="About ${escapeHtml(column.name)}" aria-expanded="false">i</button>`
     : '';
 
-  // Under the name every header has the same tools line: the sort arrow's slot, then the info button. The slot is
-  // always there (the arrow is only hidden until the column is sorted), so sorting never changes how a header wraps,
+  // The info button sits beside the name, at the bottom of its last line (a flex row, see .th-in). The
+  // sort marker is drawn by CSS in the cell's top edge and takes no room, so sorting never changes how a header wraps,
   // and headers in a row line up at the bottom.
   return `<th scope="col" class="${classes}" data-key="${escapeHtml(column.key)}" aria-sort="${ariaSort}"><div class="th-in">` +
-    `<button type="button" class="sort" data-sort="${escapeHtml(column.key)}">${headerNameHtml(column.name)}</button></div>` +
-    `<div class="th-tools"><span class="arrow" aria-hidden="true"></span>${infoButton}</div>${creditTagHtml(column, view)}</th>`;
+    `<button type="button" class="sort" data-sort="${escapeHtml(column.key)}">${headerNameHtml(column.name)}</button>${infoButton}</div>` +
+    `${creditTagHtml(column, view)}</th>`;
 }
 
 // Banner row above runs of grouped columns. The frozen Player cell must stay a single cell, so a blank run that

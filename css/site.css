@@ -36,7 +36,7 @@ a { color: var(--accent); }
 .top nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-left: auto; }
 .top nav a { color: var(--text2); text-decoration: none; }
 .top nav a:hover, .top nav a[aria-current] { color: var(--text); }
-.btn { background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); padding: 0 10px; height: var(--control-height); cursor: pointer; color: var(--text); }
+.btn { flex: none; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); padding: 0 10px; height: var(--control-height); cursor: pointer; color: var(--text); white-space: nowrap; }
 .btn:hover { border-color: var(--text2); }
 .btn:disabled { background: none; border: 1px dashed var(--line); color: var(--text3); cursor: not-allowed; }   /* faded, but the label keeps 4.5:1 */
 .btn.is-on { border-color: var(--accent); color: var(--accent); }
@@ -68,11 +68,11 @@ a { color: var(--accent); }
 .pair { display: flex; align-items: center; gap: 3px; }
 .pair input { width: 54px; }
 .seg { display: inline-flex; border: 1px solid var(--ctl); border-radius: var(--radius); overflow: hidden; }
-.seg button { height: 26px; padding: 0 10px; background: var(--panel); border: 0; color: var(--text2); cursor: pointer; }
+.seg button { height: 26px; padding: 0 10px; white-space: nowrap; background: var(--panel); border: 0; color: var(--text2); cursor: pointer; }
 .seg button[aria-pressed="true"] { background: var(--accent-fill); color: var(--ink); font-weight: 700; }
 
 /* Rank / Percentile switch: sits directly left of the Columns button, at the right end of the toolbar. */
-.right-tools { display: flex; align-items: flex-end; gap: 12px; margin-left: auto; }
+.right-tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; margin-left: auto; }   /* on a narrow screen the group wraps as whole controls; no label ever leaves its button */
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px var(--gutter) 4px; }
 .chips:empty { display: none; }
@@ -106,20 +106,20 @@ thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); paddi
 table.has-group thead tr:nth-child(2) th { top: var(--group-row-height); }
 thead th.group { height: var(--group-row-height); padding: 0 6px; text-align: left; color: var(--accent); font-size: var(--fs-label); letter-spacing: .02em; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--line); }
 thead th.group-blank { height: var(--group-row-height); padding: 0; border-bottom: 0; }
-.th-in { display: block; max-width: 100%; text-align: right; }   /* the name wraps at its break points; the tools line (arrow slot, "i") sits below */
-.sort { display: inline; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: right; cursor: pointer; }
-.th-tools { display: flex; justify-content: flex-end; align-items: center; gap: var(--sort-arrow-gap); height: var(--info-size); margin-top: 1px; }
-.arrow::after { content: "\25B2"; font-size: var(--fs-rank); line-height: 1; visibility: hidden; }   /* the slot is always taken, so sorting never changes the header's height */
+.th-in { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; column-gap: var(--info-gap); max-width: 100%; text-align: right; }   /* the "i" button sits beside the name when both fit on a line, else it wraps below the name; the name itself wraps at its break points */
+.sort { flex: 0 1 auto; min-width: 0; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: right; cursor: pointer; }
 .sort:hover { color: var(--text); }
 th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--text); box-shadow: var(--sorted-edge); }
-th[aria-sort="ascending"] .arrow::after { visibility: visible; }
-th[aria-sort="descending"] .arrow::after { content: "\25BC"; visibility: visible; }
+/* The sort marker is a small triangle in the sorted header's top edge (up = ascending, down = descending). It is absolutely
+   positioned, so it takes no width or height: sorting never changes a header's geometry. */
+th[aria-sort="ascending"]::before, th[aria-sort="descending"]::before { content: ""; position: absolute; top: 0; right: var(--sort-marker-right); width: var(--sort-marker-width); height: var(--sort-marker-height); background: var(--accent); }
+th[aria-sort="ascending"]::before { clip-path: polygon(50% 0, 0 100%, 100% 100%); }
+th[aria-sort="descending"]::before { clip-path: polygon(0 0, 100% 0, 50% 100%); }
 .info { flex: none; width: var(--info-size); height: var(--info-size); padding: 0; border: 1px solid var(--text3); border-radius: 50%; background: none; color: var(--text3); font-size: var(--fs-info-glyph); line-height: 9px; cursor: pointer; }
 .info:hover, .info[aria-expanded="true"] { color: var(--text); border-color: var(--text); }
 .credit-tag { display: block; margin-top: 1px; font-size: var(--fs-rank); font-weight: 700; letter-spacing: .05em; color: var(--accent); text-align: right; }
 th.txt, td.txt { text-align: center; }
-th.txt .th-in { text-align: center; }
-th.txt .th-tools { justify-content: center; }
+th.txt .th-in { justify-content: center; text-align: center; }
 td.num { text-align: right; white-space: nowrap; }
 .player { position: sticky; left: 0; z-index: 2; text-align: left !important; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: var(--player-pad-left); border-right: 1px solid var(--line); }
 thead th.player { z-index: 5; }
@@ -159,7 +159,7 @@ td.blank .value { color: var(--text3); }
 
 /* Percentile mode: the number sits in a small chip tinted with the rank color. The digits keep the normal text color,
    so they stay readable on every step and the color is never the only signal. Steps 1 and 5 are filled most. */
-body.percentile-mode .rank { --chip: var(--r3); --chip-fill: var(--chip-fill-weak); height: var(--chip-height); margin-left: var(--chip-gap); padding: 0 var(--chip-pad); line-height: var(--chip-height); text-align: center; vertical-align: middle; border-radius: var(--chip-radius); color: var(--text);
+body.percentile-mode .rank { --chip: var(--r3); --chip-fill: var(--chip-fill-weak); height: var(--chip-height); margin-left: var(--chip-gap); padding: 0 var(--chip-pad); line-height: var(--chip-height); text-align: center; vertical-align: middle; border-radius: var(--chip-radius); color: var(--text); font-weight: var(--fw-chip);
   background: color-mix(in srgb, var(--chip) var(--chip-fill), transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) var(--chip-edge), transparent); }
 body.percentile-mode .r1 { --chip: var(--r1); --chip-fill: var(--chip-fill-strong); }
 body.percentile-mode .r2 { --chip: var(--r2); --chip-fill: var(--chip-fill-medium); }

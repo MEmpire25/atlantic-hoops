@@ -91,11 +91,14 @@ html[data-theme="light"] {
   --cell-pad-y: 3px;
   --head-pad-y: 4px;
   --player-pad-left: 6px;
-  --player-pad-left-pick: 12px;   /* while the compare checkbox shows: --pick-left + --pick-size + a 2px gap. The name gives up this room inside the same column width. */
+  --player-pad-left-pick: 16px;   /* while the compare checkbox shows: --pick-left + --pick-size + a 2px gap. The name gives up this room inside the same column width. */
   --rank-gap: 2px;
-  --player-width-phone: 106px;   /* 100px plus the 6px the always-visible compare checkbox adds to the name's left padding, so phone names wrap as before */
-  --sort-arrow-gap: 2px;    /* space between a header's sort arrow and its "i" button */
+  --player-width-phone: 110px;   /* 100px plus the 10px the always-visible compare checkbox adds to the name's left padding, so phone names wrap as before */
   --info-size: 12px;        /* the "i" button in a header */
+  --info-gap: 3px;          /* space between a header name and its "i" button (plain px, read by JS) */
+  --sort-marker-width: 7px; /* the small triangle in the top edge of the sorted column's header; it takes no room */
+  --sort-marker-height: 4px;
+  --sort-marker-right: 3px;
   --group-row-height: 22px; /* banner row above grouped columns */
   --table-max-height: 76vh;
   --table-max-height-phone-collapsed: 84vh;
@@ -103,7 +106,7 @@ html[data-theme="light"] {
   --picker-width: 290px;
 
   /* compare checkbox before each player name (drawn inside the Player cell's left padding) */
-  --pick-left: 1px;
+  --pick-left: 5px;        /* clears the orange hover edge (--hover-edge, 3px) with a 2px gap */
   --pick-size: 9px;
   --pick-radius: 2px;
   --pick-hit: -9px -1px;    /* the tap area reaches this far beyond the square (top/bottom, left/right) */
@@ -120,6 +123,7 @@ html[data-theme="light"] {
   --chip-fill-medium: 22%;  /* steps 2 and 4 */
   --chip-fill-weak: 16%;    /* step 3 */
   --chip-edge: 45%;         /* the chip's 1px edge */
+  --fw-chip: 550;           /* chip digits: a little lighter than rank numbers (600) to offset the box (owner) */
 }
 
 /* ---------- Hardwood: court markings ---------- */

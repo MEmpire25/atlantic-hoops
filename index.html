@@ -7,9 +7,9 @@
 <title>Atlantic Hoops | Player stats</title>
 <link rel="icon" href="data:,">   <!-- no logo, so an empty icon keeps the browser asking for /favicon.ico -->
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/tokens.css">
-<link rel="stylesheet" href="css/site.css">
-<script src="js/theme.js"></script>
+<link rel="stylesheet" href="css/tokens.css?v=dece3f1832">
+<link rel="stylesheet" href="css/site.css?v=dece3f1832">
+<script src="js/theme.js?v=dece3f1832"></script>
 </head>
 <body class="filters-closed">
 <header class="top">
@@ -53,11 +53,10 @@
     <span class="pair"><input id="f-age-min" type="number" inputmode="numeric" min="0" aria-label="Minimum age"><span aria-hidden="true">&ndash;</span><input id="f-age-max" type="number" inputmode="numeric" min="0" aria-label="Maximum age"></span></div>
   <button type="button" class="btn filter-field" data-reset>Reset</button>
   <div class="right-tools">
-    <div class="fld"><span id="label-rank-mode">Beside values</span>
-      <div class="seg" role="group" aria-labelledby="label-rank-mode">
-        <button type="button" id="mode-rank" data-rank-mode="rank" aria-pressed="true">Rank</button>
-        <button type="button" id="mode-percentile" data-rank-mode="percentile" aria-pressed="false">Percentile</button>
-      </div></div>
+    <div class="seg" role="group" aria-label="Show rank or percentile beside values">
+      <button type="button" id="mode-rank" data-rank-mode="rank" aria-pressed="true">Rank</button>
+      <button type="button" id="mode-percentile" data-rank-mode="percentile" aria-pressed="false">Percentile</button>
+    </div>
     <button type="button" class="btn" id="compare-btn" disabled title="Tick at least 2 players to compare">Compare (0)</button>
     <div class="picker-wrap">
       <button type="button" class="btn" id="picker-btn" aria-expanded="false" aria-controls="picker">Columns</button>
@@ -91,6 +90,6 @@
 </footer>
 <div id="tip" role="region" aria-label="Column help" hidden></div>
 
-<script type="module" src="js/main.js"></script>
+<script type="module" src="js/main.js?v=dece3f1832"></script>
 </body>
 </html>
