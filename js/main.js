@@ -9,6 +9,7 @@ import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
 } from './columns.js';
+import { rowsOfSelected, namesNotInSeason } from './compare.js';
 import { tableHtml } from './table.js';
 import { fitColumns } from './measure.js';
 import { buildTabs, updateTabs } from './tabs.js';
@@ -43,6 +44,8 @@ const state = {
   picks: new Map(),        // tab name -> Set of picked column keys (created from the manifest defaults on first use)
   filtersOpen: false,      // phone only
   rankMode: savedRankMode(),   // 'rank' | 'percentile': which number sits beside each value
+  selected: new Map(),     // players ticked for compare: EntityId -> name; kept across tabs, seasons and RS/PO
+  compare: false,          // true: the table shows only the selected players (see renderResults)
 };
 let manifest;
 let glossary;
@@ -150,20 +153,24 @@ function resetTableScroll() {
 // Everything that changes when a filter, the season or the picked columns change.
 function renderResults() {
   if (!season) return;   // a control was used before the first season file arrived
-  shownRows = filterRows(season, state.filters);
+  const passingFilters = filterRows(season, state.filters);
+  const selectedRows = rowsOfSelected(season, state.selected);
+  shownRows = state.compare ? passingFilters.filter((row) => selectedRows.has(row)) : passingFilters;
   rankPoolRows = rankPool();
   renderFilterState();
+  renderCompareControls();
+  renderSelectionNote(selectedRows.size - shownRows.length);
   renderLegend();
   renderNotice();
   renderMain();
   renderCredits();
 }
 
-// While a name is searched, ranks are computed over the default view: no filters, so the season file's own
-// minutes floor and every position, team and age. A searched player keeps their real league rank instead of "1 of 1",
-// whatever other filters are set. With no name searched, the pool is the shown rows.
+// While a name is searched or the compare view is on, ranks are computed over the default view: no filters, so the
+// season file's own minutes floor and every position, team and age. A searched or compared player keeps their real
+// league rank instead of "1 of 1", whatever other filters are set. Otherwise the pool is the shown rows.
 function rankPool() {
-  return state.filters.search.trim() ? filterRows(season, emptyFilters()) : shownRows;
+  return state.compare || state.filters.search.trim() ? filterRows(season, emptyFilters()) : shownRows;
 }
 
 function syncSeasonControls() {
@@ -196,23 +203,47 @@ function renderFilterState() {
   for (const field of document.querySelectorAll('[data-filter]')) {
     field.classList.toggle('is-set', names.includes(field.dataset.filter));
   }
-  $('chips').innerHTML = names.map((name) =>
-    `<button type="button" class="chip" data-clear="${name}">${escapeHtml(chipLabel(name, state.filters))} &times;<span class="sr-only"> (remove filter)</span></button>`).join('');
+  const chip = (name, label, removeText) =>
+    `<button type="button" class="chip" data-clear="${name}">${escapeHtml(label)} &times;<span class="sr-only"> (${removeText})</span></button>`;
+  const compareChip = state.compare ? [chip('compare', `Comparing ${state.selected.size} players`, 'leave compare view')] : [];
+  $('chips').innerHTML = [...compareChip, ...names.map((name) => chip(name, chipLabel(name, state.filters), 'remove filter'))].join('');
 
   const filtersButton = $('filters-btn');
   filtersButton.textContent = `Filters${names.length ? ` (${names.length})` : ''}`;
   filtersButton.classList.toggle('is-set', names.length > 0);
 
-
-  const plural = names.length > 1 ? 's' : '';
+  const active = [];
+  if (state.compare) active.push('compare view');
+  if (names.length) active.push(`${names.length} filter${names.length > 1 ? 's' : ''} active`);
   $('count').innerHTML = `<b>${shownRows.length}</b> of ${season.n} players` +
-    (names.length ? ` &middot; ${names.length} filter${plural} active <button type="button" class="link" data-reset>Reset</button>` : '');
+    (active.length ? ` &middot; ${active.join(' &middot; ')} <button type="button" class="link" data-reset>Reset</button>` : '');
+}
+
+// The Compare button: needs two ticked players to start, and always works as "Exit compare" while the compare view is on.
+function renderCompareControls() {
+  const button = $('compare-btn');
+  button.textContent = state.compare ? 'Exit compare' : `Compare (${state.selected.size})`;
+  button.disabled = !state.compare && state.selected.size < 2;
+  button.classList.toggle('is-on', state.compare);
+  button.title = state.compare ? 'Back to the full table (your ticks are kept)' : 'Tick at least 2 players to compare';
+}
+
+// Says how many selected players the filters hide (compare view only) and who has no row in this season.
+function renderSelectionNote(hiddenByFilters) {
+  const sentences = [];
+  if (state.compare && hiddenByFilters > 0) {
+    sentences.push(`${hiddenByFilters} selected player${hiddenByFilters > 1 ? 's are' : ' is'} hidden by the current filters.`);
+  }
+  const absent = namesNotInSeason(season, state.selected);
+  if (absent.length) sentences.push(`Not in ${seasonText()}: ${absent.join(', ')}.`);
+  $('selection-note').textContent = sentences.join(' ');
+  $('selection-note').hidden = sentences.length === 0;
 }
 
 // The legend names the five color steps for the current mode and says which players the numbers are over (see rankPool).
 function renderLegend() {
-  const searching = state.filters.search.trim() !== '';
-  const scope = searching ? 'all players this season (name search)' : 'rows shown';
+  const scope = state.compare ? 'all players this season (compare view)'
+    : state.filters.search.trim() ? 'all players this season (name search)' : 'rows shown';
   const percentile = state.rankMode === 'percentile';
   const labels = percentile ? ['90\u2013100', '70\u201389', '30\u201369', '10\u201329', '0\u20139'] : ['top', 'upper', 'middle', 'lower', 'bottom'];
   $('legend').innerHTML = `<span>${percentile ? 'Percentile' : 'Rank'} among ${scope}:</span>` +
@@ -259,7 +290,7 @@ function renderTable(tab) {
   const rows = sortRows(shownRows, season, columnsByKey.get(state.sort.key), state.sort.direction);
   const rankTables = buildRankTables(columns, season, rankPoolRows);
   const rankDigits = new Map([...rankTables].map(([key, rankTable]) => [key, widestNumberDigits(rankTable, state.rankMode)]));
-  view = { columns, season, rows, rankTables, rankMode: state.rankMode, rankDigits, sort: state.sort, bannerTitles, glossary };
+  view = { columns, season, rows, rankTables, rankMode: state.rankMode, rankDigits, selected: state.selected, sort: state.sort, bannerTitles, glossary };
 
   const { hasBanner, html } = tableHtml(view);
   $('grid').className = hasBanner ? 'has-group' : '';
@@ -347,6 +378,11 @@ function setFilter(name, raw) {
 }
 
 function clearFilter(chipName) {
+  if (chipName === 'compare') {
+    setCompare(false);
+    $('compare-btn').focus({ preventScroll: true });
+    return;
+  }
   const fresh = emptyFilters();
   for (const name of chipName === 'age' ? ['ageMin', 'ageMax'] : [chipName]) state.filters[name] = fresh[name];
   renderResults();
@@ -356,10 +392,36 @@ function clearFilter(chipName) {
   (control.offsetParent !== null ? control : $('filters-btn')).focus({ preventScroll: true });
 }
 
+// Reset clears the filters, the ticked players and the compare view.
 function resetFilters() {
   state.filters = emptyFilters();
+  state.selected.clear();
+  state.compare = false;
   renderResults();
   syncFilterInputs(true);
+}
+
+function setCompare(on) {
+  if (on && state.selected.size < 2) return;   // the button is disabled in this case
+  state.compare = on;
+  resetTableScroll();
+  renderResults();
+}
+
+// Ticking a player. In the full table only the controls change (the table stays as it is, so scroll and focus are kept);
+// in the compare view the row leaves the table, and with fewer than two players left the compare view ends.
+function toggleSelected(entityId, name, on) {
+  const inCompareView = state.compare;
+  const box = $('grid').querySelector(`.pick-input[data-id="${entityId}"]`);
+  if (box) box.checked = on;   // already so when the click came from the box itself
+  if (on) state.selected.set(entityId, name); else state.selected.delete(entityId);
+  if (state.selected.size < 2) state.compare = false;
+  if (inCompareView) {
+    renderResults();
+    return;
+  }
+  renderCompareControls();
+  renderSelectionNote(0);
 }
 
 function sortBy(key, direction) {
@@ -429,6 +491,7 @@ function wireToolbar() {
   }
   $('season').addEventListener('change', (event) => showSeason(state.type, event.target.value));
   $('filters-btn').addEventListener('click', () => setFiltersOpen(!state.filtersOpen));
+  $('compare-btn').addEventListener('click', () => setCompare(!state.compare));
 
   $('toolbar').addEventListener('input', (event) => {
     const name = FILTER_OF_INPUT[event.target.id];
@@ -479,6 +542,14 @@ function wirePicker() {
 }
 
 function wireTable() {
+  $('grid').addEventListener('change', (event) => {
+    const box = event.target.closest('.pick-input');
+    if (!box) return;
+    const entityId = Number(box.dataset.id);
+    const inCompareView = state.compare;
+    toggleSelected(entityId, season.cols.Player[season.id.indexOf(entityId)], box.checked);
+    if (inCompareView) $('table-wrap').focus({ preventScroll: true });   // the ticked row was re-rendered away
+  });
   $('grid').addEventListener('click', (event) => {
     const header = event.target.closest('[data-sort]');
     if (header) sortBy(header.dataset.sort);
@@ -524,10 +595,12 @@ function installTestHook() {
     visibleRows: () => (view ? view.rows.map((row) => season.id[row]) : []),
     visibleColumns: () => (view ? view.columns.map((column) => column.key) : []),
     setRankMode,
+    select: (entityId, on = true) => toggleSelected(entityId, season.cols.Player[season.id.indexOf(entityId)], on),   // a player of the season on screen
+    setCompare,
     rankOf: (entityId, key) => numberOver(entityId, key, lookupRank),
     percentileOf: (entityId, key) => numberOver(entityId, key, lookupPercentile),
     state: () => ({
-      type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen, rankMode: state.rankMode,
+      type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen, rankMode: state.rankMode, compare: state.compare, selected: [...state.selected.keys()], compareEnabled: !$('compare-btn').disabled,
       filters: { ...state.filters }, shown: shownRows.length, total: season ? season.n : 0,
     }),
   };

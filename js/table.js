@@ -5,6 +5,7 @@
 //   season:       the loaded season file,
 //   rows:         row indexes in display order,
 //   rankTables:   Map key -> rank table (columns without one show no rank),
+//   selected:     Map EntityId -> name of the players ticked for compare (their checkboxes are drawn checked),
 //   rankMode:     'rank' or 'percentile': which number is shown beside each value,
 //   rankDigits:   Map key -> digits of the widest number the column shows (the cell's d1..d4 class sizes its number slot),
 //   sort:         { key, direction },
@@ -95,12 +96,19 @@ function rankHtml(rankTable, value, mode) {
   return `<span class="rank r${colorStep(rankTable, value, mode)}" title="${title}">${number}</span>`;
 }
 
+// The compare checkbox before a player's name. The label is the visible square and also carries the larger tap area.
+function pickBoxHtml(row, name, view) {
+  const entityId = view.season.id[row];
+  const checked = view.selected.has(entityId) ? ' checked' : '';
+  return `<label class="pick"><input type="checkbox" class="pick-input" data-id="${entityId}" aria-label="Select ${escapeHtml(name)} to compare"${checked}><span class="pick-box" aria-hidden="true"></span></label>`;
+}
+
 function cellHtml(row, column, view) {
   const value = view.season.cols[column.key][row];
   const sortedClass = view.sort.key === column.key ? ' is-sorted' : '';
 
   if (column.key === 'Player') {
-    return `<th scope="row" class="player" title="${escapeHtml(value)}">${escapeHtml(value)}</th>`;
+    return `<th scope="row" class="player" title="${escapeHtml(value)}">${pickBoxHtml(row, value, view)}${escapeHtml(value)}</th>`;
   }
   if (column.format === 'text') {
     return `<td class="txt${sortedClass}">${value === null ? '' : escapeHtml(value)}</td>`;

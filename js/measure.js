@@ -11,6 +11,7 @@ import { escapeHtml } from './text.js';
 
 const CANDIDATE_TEXT_LIMIT = 10;   // text columns: only the longest few strings can be the widest
 const SAFETY_PIXELS = 1;           // absorbs sub-pixel rounding
+const NO_HOVER = window.matchMedia('(hover: none)');   // keep in step with the @media (hover: none) rule in css/site.css
 
 function cssPixels(tokenName) {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(tokenName));
@@ -113,7 +114,9 @@ function naturalWidths(view, isPhone, rankSlots) {
   return view.columns.map((column, index) => {
     if (column.key === 'Player') {
       if (isPhone) return cssPixels('--player-width-phone');
-      return Math.ceil(widestValue[index] + cssPixels('--player-pad-left') + cssPixels('--cell-pad-x') + SAFETY_PIXELS);
+      // Names get the full column; only on touch screens (no hover) the compare checkbox is always drawn and takes room.
+      const padLeft = cssPixels(NO_HOVER.matches ? '--player-pad-left-pick' : '--player-pad-left');
+      return Math.ceil(widestValue[index] + padLeft + cssPixels('--cell-pad-x') + SAFETY_PIXELS);
     }
     const valueWidth = widestValue[index] + (view.rankTables.has(column.key) ? gap + rankSlots.get(view.rankDigits.get(column.key)) : 0);
     return Math.ceil(Math.max(valueWidth, headerNameWidth(column.name), toolsWidth) + cellPadding);

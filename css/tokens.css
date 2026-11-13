@@ -91,8 +91,9 @@ html[data-theme="light"] {
   --cell-pad-y: 3px;
   --head-pad-y: 4px;
   --player-pad-left: 6px;
+  --player-pad-left-pick: 12px;   /* while the compare checkbox shows: --pick-left + --pick-size + a 2px gap. The name gives up this room inside the same column width. */
   --rank-gap: 2px;
-  --player-width-phone: 100px;
+  --player-width-phone: 106px;   /* 100px plus the 6px the always-visible compare checkbox adds to the name's left padding, so phone names wrap as before */
   --sort-arrow-gap: 2px;    /* space between a header's sort arrow and its "i" button */
   --info-size: 12px;        /* the "i" button in a header */
   --group-row-height: 22px; /* banner row above grouped columns */
@@ -100,6 +101,13 @@ html[data-theme="light"] {
   --table-max-height-phone-collapsed: 84vh;
   --tooltip-width: 260px;
   --picker-width: 290px;
+
+  /* compare checkbox before each player name (drawn inside the Player cell's left padding) */
+  --pick-left: 1px;
+  --pick-size: 9px;
+  --pick-radius: 2px;
+  --pick-hit: -9px -1px;    /* the tap area reaches this far beyond the square (top/bottom, left/right) */
+  --pick-hit-touch: -9px -14px;   /* on touch screens the tap area is about 24px wide and 27px tall */
 
   /* percentile mode: the number sits in a small chip tinted with its rank color.
      --chip-pad is part of the column width (plain px, read by JS). */

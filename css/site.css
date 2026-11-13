@@ -38,6 +38,8 @@ a { color: var(--accent); }
 .top nav a:hover, .top nav a[aria-current] { color: var(--text); }
 .btn { background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); padding: 0 10px; height: var(--control-height); cursor: pointer; color: var(--text); }
 .btn:hover { border-color: var(--text2); }
+.btn:disabled { background: none; border: 1px dashed var(--line); color: var(--text3); cursor: not-allowed; }   /* faded, but the label keeps 4.5:1 */
+.btn.is-on { border-color: var(--accent); color: var(--accent); }
 .link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
 
 /* ---------- tab bar (desktop row; phone dropdown) ---------- */
@@ -61,7 +63,7 @@ a { color: var(--accent); }
 .fld input, .fld select { height: var(--control-height); min-width: 0; padding: 2px 6px; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius-small); color: var(--text); }
 .fld.is-set input, .fld.is-set select { border-color: var(--accent); }
 .fld.is-set > span { color: var(--accent); }
-#f-q { width: 150px; } #f-pos { width: 68px; } #f-team { width: 78px; } #season { width: 92px; }
+#f-q { width: 92px; } #f-pos { width: 68px; } #f-team { width: 78px; } #season { width: 92px; }
 #f-mp, #f-gp { width: 68px; }
 .pair { display: flex; align-items: center; gap: 3px; }
 .pair input { width: 54px; }
@@ -121,6 +123,25 @@ th.txt .th-tools { justify-content: center; }
 td.num { text-align: right; white-space: nowrap; }
 .player { position: sticky; left: 0; z-index: 2; text-align: left !important; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: var(--player-pad-left); border-right: 1px solid var(--line); }
 thead th.player { z-index: 5; }
+
+/* Compare checkbox: a real (visually transparent) input over a drawn square, so it is keyboard and screen-reader accessible.
+   The label's ::after widens the tap area. Every visible row's square is drawn while the pointer is anywhere over the Player column (header or any cell), and a row's own square while the
+   box has keyboard focus, or while the player is ticked; then the name gives up the padding it needs (inside the same column
+   width, so no column moves) and a long name ends in an ellipsis. Touch screens have no hover: there it is always drawn. */
+.pick { position: absolute; left: var(--pick-left); top: 50%; width: var(--pick-size); height: var(--pick-size); margin-top: calc(var(--pick-size) / -2); cursor: pointer; }
+.pick::after { content: ""; position: absolute; inset: var(--pick-hit); }
+.pick-input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pick-box { position: relative; display: block; width: 100%; height: 100%; opacity: 0; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--pick-radius); }
+.pick-input:checked + .pick-box { background: var(--accent); border-color: var(--accent); }
+.pick-input:checked + .pick-box::after { content: ""; position: absolute; left: 2px; top: 0; width: 2px; height: 4px; border: solid var(--panel); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+#grid:has(.player:hover) .pick-box, .player:focus-within .pick-box, .player:has(.pick-input:checked) .pick-box { opacity: 1; }
+#grid:has(.player:hover) tbody .player, tbody .player:focus-within, tbody .player:has(.pick-input:checked) { padding-left: var(--player-pad-left-pick); }
+@media (hover: none) {
+  .pick::after { inset: var(--pick-hit-touch); }
+  .pick-box { opacity: 1; }
+  .player { padding-left: var(--player-pad-left-pick); }
+}
+.pick-input:focus-visible + .pick-box { outline: 2px solid var(--accent); outline-offset: 1px; }
 tbody tr:hover > * { background: var(--hover); }
 /* The sorted column is painted like the lane: a tinted band with faint edge lines. A hovered row gets a marker on its player cell. */
 td.is-sorted { background: var(--sorted); box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) var(--lane-edge), transparent), inset -1px 0 0 color-mix(in srgb, var(--accent) var(--lane-edge), transparent); }

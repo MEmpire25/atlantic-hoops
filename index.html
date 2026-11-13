@@ -58,6 +58,7 @@
         <button type="button" id="mode-rank" data-rank-mode="rank" aria-pressed="true">Rank</button>
         <button type="button" id="mode-percentile" data-rank-mode="percentile" aria-pressed="false">Percentile</button>
       </div></div>
+    <button type="button" class="btn" id="compare-btn" disabled title="Tick at least 2 players to compare">Compare (0)</button>
     <div class="picker-wrap">
       <button type="button" class="btn" id="picker-btn" aria-expanded="false" aria-controls="picker">Columns</button>
       <div id="picker" role="group" aria-label="Choose columns for this tab" hidden>
@@ -74,6 +75,7 @@
 
 <div id="chips" class="chips" aria-label="Active filters"></div>
 <div id="notice" class="notice" role="status" hidden></div>
+<div id="selection-note" class="notice" role="status" hidden></div>
 <div class="meta">
   <span id="count" aria-live="polite"></span>
   <span class="legend" id="legend"></span>
