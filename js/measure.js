@@ -1,6 +1,6 @@
 // Column widths for the compact table.
 //
-// Each column is as wide as its widest value plus its rank slot, or the width its header needs (the name on two lines
+// Each column is as wide as its widest value plus its number slot, or the width its header needs (the name on two lines
 // at most, and the tools line below it), whichever is larger. The Player column is as wide as the longest name in the
 // season file. If the columns together are narrower than the table box they are stretched evenly; if wider, the table scrolls sideways.
 //
@@ -58,10 +58,20 @@ function valueCandidates(column, view) {
   return chosen.map((text) => ({ text, kind: 'value' }));
 }
 
-// Width of the rank number slot: the digits of the largest possible rank (the biggest rank pool among the columns).
-function rankSlotWidth(view) {
-  const poolSize = Math.max(0, ...Array.from(view.rankTables.values(), (rankTable) => rankTable.total));
-  return Math.ceil(measureTexts([{ text: '0'.repeat(String(poolSize).length), kind: 'rank' }])[0]) + 1;
+// Width of the number slot beside a value, for each digit count some column needs (a column's own widest number, see
+// widestNumberDigits in ranks.js). In percentile mode the slot is a chip, so its padding is part of the width.
+const MAX_RANK_DIGITS = 4;   // keep in step with the d1..d4 rules in css/site.css
+
+function rankSlotWidths(view) {
+  const digitCounts = Array.from({ length: MAX_RANK_DIGITS }, (unused, index) => index + 1);
+  const digitsWidths = measureTexts(digitCounts.map((digits) => ({ text: '0'.repeat(digits), kind: 'rank' })));
+  const extra = view.rankMode === 'percentile' ? 2 * cssPixels('--chip-pad') : 1;
+  return new Map(digitCounts.map((digits, index) => [digits, Math.ceil(digitsWidths[index]) + extra]));
+}
+
+// Space between a value and its number.
+function rankGap(view) {
+  return cssPixels(view.rankMode === 'percentile' ? '--chip-gap' : '--rank-gap');
 }
 
 // Width of the tools line under a header name: the sort arrow's slot, a gap, and the "i" button. Both arrow glyphs
@@ -87,7 +97,7 @@ function headerNameWidth(name) {
   return narrowest;
 }
 
-function naturalWidths(view, isPhone, rankSlot) {
+function naturalWidths(view, isPhone, rankSlots) {
   const cellPadding = 2 * cssPixels('--cell-pad-x');
   const entries = [];
   const owners = [];   // which column each measured value belongs to
@@ -99,13 +109,13 @@ function naturalWidths(view, isPhone, rankSlot) {
   measureTexts(entries).forEach((width, i) => { widestValue[owners[i]] = Math.max(widestValue[owners[i]], width); });
   const toolsWidth = headerToolsWidth();
 
-  const rankExtra = cssPixels('--rank-gap') + rankSlot;
+  const gap = rankGap(view);
   return view.columns.map((column, index) => {
     if (column.key === 'Player') {
       if (isPhone) return cssPixels('--player-width-phone');
       return Math.ceil(widestValue[index] + cssPixels('--player-pad-left') + cssPixels('--cell-pad-x') + SAFETY_PIXELS);
     }
-    const valueWidth = widestValue[index] + (view.rankTables.has(column.key) ? rankExtra : 0);
+    const valueWidth = widestValue[index] + (view.rankTables.has(column.key) ? gap + rankSlots.get(view.rankDigits.get(column.key)) : 0);
     return Math.ceil(Math.max(valueWidth, headerNameWidth(column.name), toolsWidth) + cellPadding);
   });
 }
@@ -124,10 +134,10 @@ function fitToBox(widths, availableWidth) {
 // Writes the widths into the table's <col> elements. Safe to call again after a resize or when the web font arrives.
 export function fitColumns(grid, wrap, view, isPhone) {
   const cols = grid.querySelectorAll('col');
-  const rankSlot = rankSlotWidth(view);
-  grid.style.setProperty('--rank-slot', `${rankSlot}px`);
+  const rankSlots = rankSlotWidths(view);
+  rankSlots.forEach((width, digits) => grid.style.setProperty(`--rank-slot-${digits}`, `${width}px`));
 
-  const widths = fitToBox(naturalWidths(view, isPhone, rankSlot), wrap.clientWidth - 1);
+  const widths = fitToBox(naturalWidths(view, isPhone, rankSlots), wrap.clientWidth - 1);
   cols.forEach((col, index) => { col.style.width = `${widths[index]}px`; });
   grid.style.width = `${widths.reduce((sum, width) => sum + width, 0)}px`;
 }

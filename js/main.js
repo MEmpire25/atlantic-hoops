@@ -3,7 +3,7 @@
 // This file holds the page state and connects the controls to that flow.
 import { loadManifest, loadGlossary, loadSeason } from './data.js';
 import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js';
-import { buildRankTable, buildRankTables, lookupRank } from './ranks.js';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js';
 import { naturalSortDirection, sortRows } from './sorting.js';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
@@ -20,6 +20,8 @@ import { escapeHtml } from './text.js';
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
 const RESIZE_DELAY_MS = 120;
+const RANK_MODE_KEY = 'ah-rank-mode';
+const RANK_MODES = ['rank', 'percentile'];
 const POSITION_ORDER = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 // Which filter each input edits, and which input a removed chip hands focus back to.
@@ -40,6 +42,7 @@ const state = {
   sort: null,              // { key, direction }
   picks: new Map(),        // tab name -> Set of picked column keys (created from the manifest defaults on first use)
   filtersOpen: false,      // phone only
+  rankMode: savedRankMode(),   // 'rank' | 'percentile': which number sits beside each value
 };
 let manifest;
 let glossary;
@@ -59,6 +62,20 @@ let tooltip;
 const currentTab = () => findTab(manifest, state.tab);
 const seasonText = () => `${state.season} ${state.type === 'po' ? 'playoffs' : 'regular season'}`;
 const minMpFloor = () => manifest.min_mp[state.type][state.season];   // the source data's own floor for this season
+
+// The visitor's last choice, kept like the theme. Storage can be blocked, then the default (rank) applies.
+function savedRankMode() {
+  try {
+    const saved = localStorage.getItem(RANK_MODE_KEY);
+    return RANK_MODES.includes(saved) ? saved : 'rank';
+  } catch (error) {
+    return 'rank';
+  }
+}
+
+function rememberRankMode(mode) {
+  try { localStorage.setItem(RANK_MODE_KEY, mode); } catch (error) { /* the choice just will not persist */ }
+}
 
 function picksOf(tab) {
   if (!state.picks.has(tab.name)) state.picks.set(tab.name, defaultPicks(tab));
@@ -136,6 +153,7 @@ function renderResults() {
   shownRows = filterRows(season, state.filters);
   rankPoolRows = rankPool();
   renderFilterState();
+  renderLegend();
   renderNotice();
   renderMain();
   renderCredits();
@@ -185,12 +203,21 @@ function renderFilterState() {
   filtersButton.textContent = `Filters${names.length ? ` (${names.length})` : ''}`;
   filtersButton.classList.toggle('is-set', names.length > 0);
 
-  // The legend says which players the ranks are over (see rankPool).
-  $('legend-label').textContent = names.includes('search') ? 'Rank among all players this season (name search):' : 'Rank among rows shown:';
 
   const plural = names.length > 1 ? 's' : '';
   $('count').innerHTML = `<b>${shownRows.length}</b> of ${season.n} players` +
     (names.length ? ` &middot; ${names.length} filter${plural} active <button type="button" class="link" data-reset>Reset</button>` : '');
+}
+
+// The legend names the five color steps for the current mode and says which players the numbers are over (see rankPool).
+function renderLegend() {
+  const searching = state.filters.search.trim() !== '';
+  const scope = searching ? 'all players this season (name search)' : 'rows shown';
+  const percentile = state.rankMode === 'percentile';
+  const labels = percentile ? ['90\u2013100', '70\u201389', '30\u201369', '10\u201329', '0\u20139'] : ['top', 'upper', 'middle', 'lower', 'bottom'];
+  $('legend').innerHTML = `<span>${percentile ? 'Percentile' : 'Rank'} among ${scope}:</span>` +
+    labels.map((label, index) => `<span class="rank r${index + 1}">${label}</span>`).join('') +
+    '<span class="muted">&nbsp;&middot; no color = not ranked</span>';
 }
 
 // Names the columns of this tab that have no data for the season and are therefore left out (partly empty tabs only;
@@ -231,7 +258,8 @@ function renderTable(tab) {
 
   const rows = sortRows(shownRows, season, columnsByKey.get(state.sort.key), state.sort.direction);
   const rankTables = buildRankTables(columns, season, rankPoolRows);
-  view = { columns, season, rows, rankTables, sort: state.sort, bannerTitles, glossary };
+  const rankDigits = new Map([...rankTables].map(([key, rankTable]) => [key, widestNumberDigits(rankTable, state.rankMode)]));
+  view = { columns, season, rows, rankTables, rankMode: state.rankMode, rankDigits, sort: state.sort, bannerTitles, glossary };
 
   const { hasBanner, html } = tableHtml(view);
   $('grid').className = hasBanner ? 'has-group' : '';
@@ -343,6 +371,22 @@ function sortBy(key, direction) {
   $('grid').querySelector(`[data-sort="${CSS.escape(key)}"]`)?.focus({ preventScroll: true });   // the header was re-rendered
 }
 
+function setRankMode(mode) {
+  state.rankMode = mode;
+  rememberRankMode(mode);
+  syncRankModeControls();
+  renderLegend();
+  if (season) renderMain();
+}
+
+// The switch buttons and the body class that styles the numbers as chips.
+function syncRankModeControls() {
+  for (const button of document.querySelectorAll('[data-rank-mode]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.rankMode === state.rankMode));
+  }
+  document.body.classList.toggle('percentile-mode', state.rankMode === 'percentile');
+}
+
 function pickColumns(action) {
   const tab = currentTab();
   const wanted = (column) => action === 'all' || (action === 'default' && column.default_visible);
@@ -379,6 +423,9 @@ function wireTabs() {
 function wireToolbar() {
   for (const button of document.querySelectorAll('[data-type]')) {
     button.addEventListener('click', () => { if (button.dataset.type !== state.type) setType(button.dataset.type); });
+  }
+  for (const button of document.querySelectorAll('[data-rank-mode]')) {
+    button.addEventListener('click', () => { if (button.dataset.rankMode !== state.rankMode) setRankMode(button.dataset.rankMode); });
   }
   $('season').addEventListener('change', (event) => showSeason(state.type, event.target.value));
   $('filters-btn').addEventListener('click', () => setFiltersOpen(!state.filtersOpen));
@@ -453,6 +500,16 @@ function wireTable() {
 }
 
 // ---------- test hook for QA (documented in README.md) ----------
+// Works for any column of the season file, shown or not; the number is over the rank pool. Null when the row is hidden by
+// the filters or the column has no number for it.
+function numberOver(entityId, key, lookup) {
+  const row = season.id.indexOf(entityId);
+  const column = columnsByKey.get(key);
+  const value = season.cols[key][row];
+  if (!shownRows.includes(row) || column.rank === 'none' || column.format === 'text' || value === null) return null;
+  return lookup(buildRankTable(season.cols[key], rankPoolRows, column.rank), value);
+}
+
 function installTestHook() {
   window.AH_TEST = {
     setTab,
@@ -466,15 +523,11 @@ function installTestHook() {
     pickColumns,
     visibleRows: () => (view ? view.rows.map((row) => season.id[row]) : []),
     visibleColumns: () => (view ? view.columns.map((column) => column.key) : []),
-    rankOf: (entityId, key) => {   // works for any column of the season file, shown or not; the rank is over the rank pool
-      const row = season.id.indexOf(entityId);
-      const column = columnsByKey.get(key);
-      const value = season.cols[key][row];
-      if (!shownRows.includes(row) || column.rank === 'none' || column.format === 'text' || value === null) return null;
-      return lookupRank(buildRankTable(season.cols[key], rankPoolRows, column.rank), value);
-    },
+    setRankMode,
+    rankOf: (entityId, key) => numberOver(entityId, key, lookupRank),
+    percentileOf: (entityId, key) => numberOver(entityId, key, lookupPercentile),
     state: () => ({
-      type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen,
+      type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen, rankMode: state.rankMode,
       filters: { ...state.filters }, shown: shownRows.length, total: season ? season.n : 0,
     }),
   };
@@ -507,6 +560,7 @@ async function start() {
   wireTable();
   installTestHook();
   setFiltersOpen(false);
+  syncRankModeControls();
 
   await showSeason('rs', manifest.seasons.rs[0]);
   document.body.dataset.ready = 'true';

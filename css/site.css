@@ -24,9 +24,15 @@ button, select, input { font: inherit; color: inherit; }
 a { color: var(--accent); }
 
 /* ---------- header ---------- */
-.top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px var(--gutter); border-bottom: 1px solid var(--line); }
-.wordmark { font-size: var(--fs-wordmark); font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
-.wordmark b { color: var(--accent); font-weight: 700; }
+/* Hardwood: faint plank seams run across the header, and on wide screens a half-court drawing sits behind it. */
+.top { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px var(--gutter); border-bottom: var(--header-rule) solid var(--line);
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent) var(--seam-strength), transparent) 0 1px, transparent 1px var(--seam-gap)); }
+.top > *:not(.deco) { position: relative; z-index: 1; }
+.deco { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.deco svg { position: absolute; left: var(--deco-left); top: 0; height: 100%; width: auto; }
+.deco path, .deco rect, .deco line { fill: none; stroke: var(--accent); stroke-width: var(--deco-stroke); opacity: var(--deco-strength); vector-effect: non-scaling-stroke; }
+.wordmark { font-size: var(--fs-wordmark); font-weight: var(--wordmark-weight); letter-spacing: var(--wordmark-tracking); text-transform: uppercase; color: var(--text); text-decoration: none; }
+.wordmark b { color: var(--accent); font-weight: inherit; }
 .top nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-left: auto; }
 .top nav a { color: var(--text2); text-decoration: none; }
 .top nav a:hover, .top nav a[aria-current] { color: var(--text); }
@@ -35,15 +41,16 @@ a { color: var(--accent); }
 .link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
 
 /* ---------- tab bar (desktop row; phone dropdown) ---------- */
-.tabbar { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); padding: 0 var(--gutter); }
+.tabbar { display: flex; align-items: stretch; border-bottom: 1px solid var(--ctl); padding: 0 var(--gutter); }
 .tabsel { display: none; flex: 1; min-width: 0; flex-direction: row; align-items: center; gap: 8px; padding: 8px 0; font-size: var(--fs-note); }
 .tabsel select { flex: 1; min-width: 0; height: var(--phone-control-height); padding: 2px 8px; font-size: var(--fs-phone-control); font-weight: 600; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius); color: var(--text); }
 .filters-btn { display: none; align-self: center; flex: none; height: var(--phone-control-height); margin-left: 8px; padding: 0 12px; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); color: var(--text); font-size: var(--fs-phone-control); font-weight: 600; cursor: pointer; white-space: nowrap; }
 .filters-btn.is-set { border-color: var(--accent); color: var(--accent); }
 #tabs { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; gap: 2px; }
-.tab { flex: none; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--text2); padding: 9px 10px 8px; cursor: pointer; white-space: nowrap; }
+/* The active tab gets a short thick lane marker along its top edge. */
+.tab { flex: none; background: none; border: 0; color: var(--text2); padding: 10px 10px 9px; font-weight: var(--tab-weight); cursor: pointer; white-space: nowrap; }
 .tab:hover { color: var(--text); }
-.tab.is-active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+.tab.is-active { color: var(--text); font-weight: var(--tab-active-weight); box-shadow: inset 0 var(--tab-marker) 0 var(--accent); }
 .tab.is-empty { color: var(--text3); }
 .tab-flag { font-size: var(--fs-label); }
 
@@ -60,14 +67,17 @@ a { color: var(--accent); }
 .pair input { width: 54px; }
 .seg { display: inline-flex; border: 1px solid var(--ctl); border-radius: var(--radius); overflow: hidden; }
 .seg button { height: 26px; padding: 0 10px; background: var(--panel); border: 0; color: var(--text2); cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--accent-fill); color: var(--ink); font-weight: 600; }
+.seg button[aria-pressed="true"] { background: var(--accent-fill); color: var(--ink); font-weight: 700; }
+
+/* Rank / Percentile switch: sits directly left of the Columns button, at the right end of the toolbar. */
+.right-tools { display: flex; align-items: flex-end; gap: 12px; margin-left: auto; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px var(--gutter) 4px; }
 .chips:empty { display: none; }
 .chip { min-height: 24px; max-width: 100%; padding: 2px 9px; white-space: normal; text-align: left; border: 1px solid var(--accent); border-radius: 14px; background: none; color: var(--accent); cursor: pointer; font-size: var(--fs-note); }
 .chip:hover { background: var(--hover); }
 
-.picker-wrap { position: relative; margin-left: auto; }
+.picker-wrap { position: relative; }
 #picker { position: absolute; z-index: 30; right: 0; top: calc(100% + 4px); width: var(--picker-width); max-height: 60vh; overflow: auto; padding: 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: 8px; box-shadow: var(--shadow); }
 .pk-actions { display: flex; gap: 6px; margin-bottom: 8px; }
 .pk-actions button { height: 24px; padding: 0 8px; background: none; border: 1px solid var(--ctl); border-radius: var(--radius-small); cursor: pointer; color: var(--text2); }
@@ -87,10 +97,10 @@ a { color: var(--accent); }
 /* ---------- table ---------- */
 /* Fixed layout: main.js measures every column (widest value + rank, or longest header word) and writes the widths,
    so the default columns of every tab fit a 1366px laptop. If chosen columns cannot fit, the table scrolls sideways. */
-.table-wrap { margin: 0 var(--gutter); overflow: auto; scrollbar-gutter: stable; max-height: var(--table-max-height); min-height: 200px; background: var(--row); border: 1px solid var(--line); border-radius: var(--radius); }
+.table-wrap { margin: 0 var(--gutter); overflow: auto; scrollbar-gutter: stable; max-height: var(--table-max-height); min-height: 200px; background: var(--row); border: 1px solid var(--line); border-radius: var(--table-radius); }
 table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-size: var(--fs-value); font-variant-numeric: tabular-nums; }
 th, td { padding: var(--cell-pad-y) var(--cell-pad-x); background: var(--row); border-bottom: 1px solid var(--line); }
-thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); padding: var(--head-pad-y) var(--cell-pad-x) 3px; font-size: var(--fs-head); font-weight: 600; line-height: 1.2; color: var(--text2); text-align: right; vertical-align: bottom; border-bottom: 1px solid var(--ctl); }
+thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); padding: var(--head-pad-y) var(--cell-pad-x) 3px; font-size: var(--fs-head); font-weight: var(--head-weight); line-height: 1.2; color: var(--text2); text-align: right; vertical-align: bottom; border-bottom: 1px solid var(--ctl); }
 table.has-group thead tr:nth-child(2) th { top: var(--group-row-height); }
 thead th.group { height: var(--group-row-height); padding: 0 6px; text-align: left; color: var(--accent); font-size: var(--fs-label); letter-spacing: .02em; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--line); }
 thead th.group-blank { height: var(--group-row-height); padding: 0; border-bottom: 0; }
@@ -99,7 +109,7 @@ thead th.group-blank { height: var(--group-row-height); padding: 0; border-botto
 .th-tools { display: flex; justify-content: flex-end; align-items: center; gap: var(--sort-arrow-gap); height: var(--info-size); margin-top: 1px; }
 .arrow::after { content: "\25B2"; font-size: var(--fs-rank); line-height: 1; visibility: hidden; }   /* the slot is always taken, so sorting never changes the header's height */
 .sort:hover { color: var(--text); }
-th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--text); }
+th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--text); box-shadow: var(--sorted-edge); }
 th[aria-sort="ascending"] .arrow::after { visibility: visible; }
 th[aria-sort="descending"] .arrow::after { content: "\25BC"; visibility: visible; }
 .info { flex: none; width: var(--info-size); height: var(--info-size); padding: 0; border: 1px solid var(--text3); border-radius: 50%; background: none; color: var(--text3); font-size: var(--fs-info-glyph); line-height: 9px; cursor: pointer; }
@@ -112,19 +122,37 @@ td.num { text-align: right; white-space: nowrap; }
 .player { position: sticky; left: 0; z-index: 2; text-align: left !important; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-left: var(--player-pad-left); border-right: 1px solid var(--line); }
 thead th.player { z-index: 5; }
 tbody tr:hover > * { background: var(--hover); }
-td.is-sorted { background: var(--sorted); }
+/* The sorted column is painted like the lane: a tinted band with faint edge lines. A hovered row gets a marker on its player cell. */
+td.is-sorted { background: var(--sorted); box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) var(--lane-edge), transparent), inset -1px 0 0 color-mix(in srgb, var(--accent) var(--lane-edge), transparent); }
 tbody tr:hover > td.is-sorted { background: var(--hover); }
+tbody tr:hover > .player { box-shadow: inset var(--hover-edge) 0 0 var(--accent); }
 td.blank .value { color: var(--text3); }
-.rank { display: inline-block; min-width: var(--rank-slot, 18px); margin-left: var(--rank-gap); text-align: left; font-size: var(--fs-rank); font-weight: 600; }
+
+/* Rank mode (default): the rank is a small colored number after the value. Each ranked cell carries d1..d4, the digit
+   count of the widest number its column shows, and main.js writes --rank-slot-1..4 (measured), so values line up. */
+.rank { display: inline-block; margin-left: var(--rank-gap); text-align: left; font-size: var(--fs-rank); font-weight: 600; }
+.d1 .rank { min-width: var(--rank-slot-1); } .d2 .rank { min-width: var(--rank-slot-2); }
+.d3 .rank { min-width: var(--rank-slot-3); } .d4 .rank { min-width: var(--rank-slot-4); }
 .r1 { color: var(--r1); } .r2 { color: var(--r2); } .r3 { color: var(--r3); } .r4 { color: var(--r4); } .r5 { color: var(--r5); }
-.legend .rank { min-width: 0; margin-left: 8px; }
+.legend .rank { margin-left: 8px; }
+
+/* Percentile mode: the number sits in a small chip tinted with the rank color. The digits keep the normal text color,
+   so they stay readable on every step and the color is never the only signal. Steps 1 and 5 are filled most. */
+body.percentile-mode .rank { --chip: var(--r3); --chip-fill: var(--chip-fill-weak); height: var(--chip-height); margin-left: var(--chip-gap); padding: 0 var(--chip-pad); line-height: var(--chip-height); text-align: center; vertical-align: middle; border-radius: var(--chip-radius); color: var(--text);
+  background: color-mix(in srgb, var(--chip) var(--chip-fill), transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) var(--chip-edge), transparent); }
+body.percentile-mode .r1 { --chip: var(--r1); --chip-fill: var(--chip-fill-strong); }
+body.percentile-mode .r2 { --chip: var(--r2); --chip-fill: var(--chip-fill-medium); }
+body.percentile-mode .r3 { --chip: var(--r3); --chip-fill: var(--chip-fill-weak); }
+body.percentile-mode .r4 { --chip: var(--r4); --chip-fill: var(--chip-fill-medium); }
+body.percentile-mode .r5 { --chip: var(--r5); --chip-fill: var(--chip-fill-strong); }
+body.percentile-mode .legend .rank { padding: 0 var(--chip-pad-legend); margin-left: var(--chip-pad-legend); }
 
 /* hidden spans the column fitter measures; they must use the same font settings as the table */
 .measure-host { position: absolute; visibility: hidden; left: 0; top: 0; white-space: nowrap; font-variant-numeric: tabular-nums; pointer-events: none; }
 .measure-host span { position: absolute; white-space: nowrap; }
 .measure-value { font-size: var(--fs-value); }
 .measure-player { font-size: var(--fs-value); font-weight: 500; }
-.measure-head { font-size: var(--fs-head); font-weight: 600; }
+.measure-head { font-size: var(--fs-head); font-weight: var(--head-weight); }
 .measure-rank { font-size: var(--fs-rank); font-weight: 600; }
 
 /* ---------- states ---------- */
@@ -147,7 +175,7 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
 
 /* ---------- glossary page ---------- */
 .glossary { max-width: 900px; margin: 0 auto; padding: 16px var(--gutter) 40px; }
-.glossary h1 { margin: 0 0 6px; font-size: var(--fs-wordmark); }
+.glossary h1 { margin: 0 0 6px; font-size: var(--fs-page-title); }
 .glossary > p { margin: 0 0 12px; color: var(--text2); }
 .section-nav { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 18px; padding: 0; list-style: none; }
 .glossary section { margin: 0 0 26px; }
@@ -164,11 +192,14 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
 .compact li { break-inside: avoid; margin: 0 0 6px; padding: 2px 4px; border: 1px solid transparent; border-radius: 4px; scroll-margin-top: 12px; color: var(--text2); }
 .compact li b { color: var(--text); }
 
+/* ---------- narrow screens: the half-court drawing would crowd the navigation ---------- */
+@media (max-width: 900px) { .deco { display: none; } }
+
 /* ---------- phone: 640px and below (keep in step with PHONE_QUERY in js/main.js) ---------- */
 @media (max-width: 640px) {
   .toolbar { gap: 8px 10px; }
   #f-q { width: 130px; }
-  .picker-wrap { margin-left: 0; }
+  .right-tools { margin-left: 0; }
   #picker { position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px; width: auto; max-height: 65vh; }
   .table-wrap, .panel-msg, .skeleton { margin: 0 var(--gutter-phone); }
   .player { white-space: normal; text-overflow: clip; }

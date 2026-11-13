@@ -5,13 +5,15 @@
 //   season:       the loaded season file,
 //   rows:         row indexes in display order,
 //   rankTables:   Map key -> rank table (columns without one show no rank),
+//   rankMode:     'rank' or 'percentile': which number is shown beside each value,
+//   rankDigits:   Map key -> digits of the widest number the column shows (the cell's d1..d4 class sizes its number slot),
 //   sort:         { key, direction },
 //   bannerTitles: Map key -> banner title (groups of columns, e.g. "1-Year RAPM Measures"),
 //   glossary:     the glossary file (only its tooltips are used here, to decide where the "i" button goes)
 // }
 import { escapeHtml } from './text.js';
 import { formatValue } from './format.js';
-import { colorStep, lookupRank } from './ranks.js';
+import { colorStep, shownNumber } from './ranks.js';
 import { sourceTag } from './columns.js';
 
 const BLANK_MARK = '–';
@@ -87,9 +89,10 @@ function bannerRowHtml(view) {
   return `<tr>${cells}</tr>`;
 }
 
-function rankHtml(rankTable, value) {
-  const rank = lookupRank(rankTable, value);
-  return `<span class="rank r${colorStep(rank, rankTable.total)}" title="Rank ${rank} of ${rankTable.total}">${rank}</span>`;
+function rankHtml(rankTable, value, mode) {
+  const number = shownNumber(rankTable, value, mode);
+  const title = mode === 'percentile' ? `Percentile ${number} (among ${rankTable.total})` : `Rank ${number} of ${rankTable.total}`;
+  return `<span class="rank r${colorStep(rankTable, value, mode)}" title="${title}">${number}</span>`;
 }
 
 function cellHtml(row, column, view) {
@@ -106,8 +109,9 @@ function cellHtml(row, column, view) {
     return `<td class="num blank${sortedClass}"><span class="value">${BLANK_MARK}</span></td>`;
   }
   const rankTable = view.rankTables.get(column.key);
-  return `<td class="num${sortedClass}"><span class="value">${formatValue(value, column)}</span>` +
-    `${rankTable ? rankHtml(rankTable, value) : ''}</td>`;
+  if (!rankTable) return `<td class="num${sortedClass}"><span class="value">${formatValue(value, column)}</span></td>`;
+  return `<td class="num d${view.rankDigits.get(column.key)}${sortedClass}"><span class="value">${formatValue(value, column)}</span>` +
+    `${rankHtml(rankTable, value, view.rankMode)}</td>`;
 }
 
 export function tableHtml(view) {

@@ -1,22 +1,23 @@
 /* Style tokens for the whole site: every color, font size, spacing and table size lives here.
    Change a value here and both pages follow. site.css only uses these names and holds no raw colors or sizes.
-   Soft orange + middle gray, with a blue -> gray -> rose rank scale. */
+   Identity "Hardwood": walnut and maple, ball orange as the accent, court markings as the signature, with a
+   blue -> gray -> rose rank scale. */
 
-/* ---------- colors: dark theme (default) ---------- */
+/* ---------- colors: dark theme (default; walnut) ---------- */
 :root,
 html[data-theme="dark"] {
-  --bg: #141517;
-  --panel: #1B1C1F;
-  --row: #141517;
-  --line: #2A2C31;          /* decorative dividers only */
-  --ctl: #6B6F76;           /* borders of inputs and buttons (needs 3:1) */
-  --hover: #24262B;
-  --sorted: #241F1D;        /* cells of the sorted column */
-  --text: #E9E6E1;
-  --text2: #A9ACB2;
-  --text3: #8C9097;         /* middle gray: units, blanks, dimmed text */
-  --accent: #F2A365;        /* text-safe orange: links, chips, banner */
-  --accent-fill: #F2A365;   /* soft orange fill (pressed toggle) */
+  --bg: #15110D;
+  --panel: #1E1812;
+  --row: #15110D;
+  --line: #2E251C;          /* decorative dividers only */
+  --ctl: #7A6D5E;           /* borders of inputs and buttons (needs 3:1) */
+  --hover: #2A2118;
+  --sorted: #2B2015;        /* cells of the sorted column ("the painted lane") */
+  --text: #F1E8DB;
+  --text2: #B7AA98;
+  --text3: #9E927F;         /* middle gray: units, blanks, dimmed text */
+  --accent: #F59A4A;        /* ball orange: links, chips, banner, markers */
+  --accent-fill: #F59A4A;   /* orange fill (pressed toggle) */
   --ink: #1A1109;           /* text on --accent-fill */
   --err: #FF5C7A;
   --shadow: 0 8px 24px rgba(0, 0, 0, .45);
@@ -24,32 +25,32 @@ html[data-theme="dark"] {
   /* rank scale, best (1) to worst (5) */
   --r1: #5CB0FF;
   --r2: #9CC7EE;
-  --r3: #8C9097;
+  --r3: #9E927F;
   --r4: #F0A0B0;
   --r5: #FF5C7A;
 }
 
-/* ---------- colors: light theme ---------- */
+/* ---------- colors: light theme (maple) ---------- */
 html[data-theme="light"] {
-  --bg: #FAF8F5;
-  --panel: #FFFFFF;
-  --row: #FFFFFF;
-  --line: #E3DFD9;
-  --ctl: #858992;
-  --hover: #F0EDE8;
-  --sorted: #F8EEE6;
-  --text: #1F1D1A;
-  --text2: #55585E;
-  --text3: #666A71;
-  --accent: #A94E0B;
-  --accent-fill: #F2A365;
+  --bg: #F4EBDC;
+  --panel: #FBF6EC;
+  --row: #FBF6EC;
+  --line: #E2D4BC;
+  --ctl: #8A7A66;
+  --hover: #F5EDDD;
+  --sorted: #F8EAD4;
+  --text: #2A1F14;
+  --text2: #4A3F32;
+  --text3: #6B5E4E;
+  --accent: #9C4A0A;        /* text-safe burnt orange on maple */
+  --accent-fill: #F59A4A;
   --ink: #1A1109;
   --err: #B3003B;
   --shadow: 0 8px 24px rgba(60, 40, 20, .18);
 
   --r1: #0D47A1;
   --r2: #35699A;
-  --r3: #666A71;
+  --r3: #6B5E4E;
   --r4: #B0455A;
   --r5: #B3003B;
 }
@@ -57,7 +58,10 @@ html[data-theme="light"] {
 /* ---------- type ---------- */
 :root {
   --font: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fs-wordmark: 19px;
+  --fs-wordmark: 16px;
+  --wordmark-weight: 800;
+  --wordmark-tracking: .16em;
+  --fs-page-title: 19px;    /* the glossary page's heading */
   --fs-panel-title: 15px;
   --fs-body: 13px;
   --fs-phone-control: 14px;
@@ -67,6 +71,9 @@ html[data-theme="light"] {
   --fs-head: 10.5px;        /* column headers */
   --fs-rank: 9.5px;         /* rank numbers, credit tags, sort arrows */
   --fs-info-glyph: 8px;     /* the "i" inside the header info button */
+  --head-weight: 650;       /* column headers */
+  --tab-weight: 500;
+  --tab-active-weight: 700;
 }
 
 /* ---------- spacing and sizes ---------- */
@@ -75,8 +82,9 @@ html[data-theme="light"] {
   --gutter-phone: 6px;
   --control-height: 28px;
   --phone-control-height: 36px;
-  --radius: 6px;
-  --radius-small: 5px;
+  --radius: 4px;
+  --radius-small: 3px;
+  --table-radius: 2px;      /* the table box is nearly square, like a scorer's table */
 
   /* table density. JS reads the numbers below to size the columns; keep them plain px values. */
   --cell-pad-x: 2px;
@@ -92,4 +100,30 @@ html[data-theme="light"] {
   --table-max-height-phone-collapsed: 84vh;
   --tooltip-width: 260px;
   --picker-width: 290px;
+
+  /* percentile mode: the number sits in a small chip tinted with its rank color.
+     --chip-pad is part of the column width (plain px, read by JS). */
+  --chip-height: 14px;
+  --chip-pad: 1px;
+  --chip-gap: 1px;          /* space between the value and the chip (plain px, read by JS) */
+  --chip-pad-legend: 6px;   /* the legend's chips are wider than the table's */
+  --chip-radius: 3px;
+  --chip-fill-strong: 34%;  /* how much of the rank color fills the chip: steps 1 and 5 */
+  --chip-fill-medium: 22%;  /* steps 2 and 4 */
+  --chip-fill-weak: 16%;    /* step 3 */
+  --chip-edge: 45%;         /* the chip's 1px edge */
+}
+
+/* ---------- Hardwood: court markings ---------- */
+:root {
+  --header-rule: 2px;       /* the baseline under the header */
+  --seam-gap: 46px;         /* plank seams across the header */
+  --seam-strength: 7%;
+  --deco-left: 230px;       /* where the half-court drawing starts */
+  --deco-strength: .4;
+  --deco-stroke: 1.4;
+  --tab-marker: 3px;        /* lane marker above the active tab */
+  --lane-edge: 35%;         /* edge lines of the sorted column */
+  --hover-edge: 3px;        /* marker on a hovered row's player cell */
+  --sorted-edge: inset 0 -2px 0 var(--accent);   /* under the sorted column's header */
 }
