@@ -1,22 +1,22 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js?v=b3e8ff2edc';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=b3e8ff2edc';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=b3e8ff2edc';
-import { naturalSortDirection, sortRows } from './sorting.js?v=b3e8ff2edc';
+import { loadManifest, loadGlossary, loadSeason } from './data.js?v=0bb59059d4';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=0bb59059d4';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=0bb59059d4';
+import { naturalSortDirection, sortRows } from './sorting.js?v=0bb59059d4';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=b3e8ff2edc';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=b3e8ff2edc';
-import { tableHtml } from './table.js?v=b3e8ff2edc';
-import { fitColumns } from './measure.js?v=b3e8ff2edc';
-import { buildTabs, updateTabs } from './tabs.js?v=b3e8ff2edc';
-import { pickerHtml, pickerLabel } from './picker.js?v=b3e8ff2edc';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=b3e8ff2edc';
-import { setUpTooltip } from './tooltip.js?v=b3e8ff2edc';
-import { escapeHtml } from './text.js?v=b3e8ff2edc';
+} from './columns.js?v=0bb59059d4';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=0bb59059d4';
+import { tableHtml } from './table.js?v=0bb59059d4';
+import { fitColumns } from './measure.js?v=0bb59059d4';
+import { buildTabs, updateTabs } from './tabs.js?v=0bb59059d4';
+import { pickerHtml, pickerLabel } from './picker.js?v=0bb59059d4';
+import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=0bb59059d4';
+import { setUpTooltip } from './tooltip.js?v=0bb59059d4';
+import { escapeHtml } from './text.js?v=0bb59059d4';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton

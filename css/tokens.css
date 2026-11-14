@@ -118,6 +118,8 @@ html[data-theme="light"] {
   --chip-pad: 1px;
   --chip-gap: 1px;          /* space between the value and the chip (plain px, read by JS) */
   --chip-pad-legend: 6px;   /* the legend's chips are wider than the table's */
+  --chip-height-legend: 16px; /* legend chips: taller than the table's, so the digits can sit centered */
+  --digit-height: .727em;   /* Inter's digit (cap) height, used to center the legend digits */
   --chip-radius: 3px;
   --chip-fill-strong: 34%;  /* how much of the rank color fills the chip: steps 1 and 5 */
   --chip-fill-medium: 22%;  /* steps 2 and 4 */

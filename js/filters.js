@@ -1,6 +1,6 @@
 // Filter state and the filtering step: season file + filters -> indexes of the rows to show (source order).
 // Ranks are computed over exactly this set.
-import { normalizeForSearch } from './text.js?v=b3e8ff2edc';
+import { normalizeForSearch } from './text.js?v=0bb59059d4';
 
 export function emptyFilters() {
   return { pos: '', team: '', minMp: null, minGp: null, ageMin: null, ageMax: null, search: '' };

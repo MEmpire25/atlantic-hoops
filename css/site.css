@@ -167,7 +167,12 @@ body.percentile-mode .r2 { --chip: var(--r2); --chip-fill: var(--chip-fill-mediu
 body.percentile-mode .r3 { --chip: var(--r3); --chip-fill: var(--chip-fill-weak); }
 body.percentile-mode .r4 { --chip: var(--r4); --chip-fill: var(--chip-fill-medium); }
 body.percentile-mode .r5 { --chip: var(--r5); --chip-fill: var(--chip-fill-strong); }
-body.percentile-mode .legend .rank { padding: 0 var(--chip-pad-legend); margin-left: var(--chip-pad-legend); }
+/* Legend chips center on the digits themselves (text-box trims the line to the digit height), in a 16px box: with the
+   table's 14px line box Inter's digits sat visibly high at 125% display scaling. Browsers without text-box fall back
+   to the old look. The table chips keep their 14px: they are part of the column widths. */
+body.percentile-mode .legend .rank { height: auto; margin-left: var(--chip-pad-legend);
+  padding: calc((var(--chip-height-legend) - var(--digit-height)) / 2) var(--chip-pad-legend);
+  line-height: var(--digit-height); text-box: trim-both cap alphabetic; }
 
 /* hidden spans the column fitter measures; they must use the same font settings as the table */
 .measure-host { position: absolute; visibility: hidden; left: 0; top: 0; white-space: nowrap; font-variant-numeric: tabular-nums; pointer-events: none; }
