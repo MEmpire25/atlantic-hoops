@@ -84,6 +84,7 @@ a { color: var(--accent); }
 .pk-actions { display: flex; gap: 6px; margin-bottom: 8px; }
 .pk-actions button { height: 24px; padding: 0 8px; background: none; border: 1px solid var(--ctl); border-radius: var(--radius-small); cursor: pointer; color: var(--text2); }
 .pk-group { margin: 8px 0 2px; font-size: var(--fs-label); font-weight: 600; color: var(--accent); }
+.pk-gap { height: 8px; }   /* separates the player-info columns from the tab's own columns */
 .pk-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; color: var(--text); }
 .pk-item.is-off { color: var(--text3); }
 .pk-item em { font-style: normal; font-size: var(--fs-label); color: var(--text3); }

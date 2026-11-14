@@ -12,10 +12,10 @@
 //   bannerTitles: Map key -> banner title (groups of columns, e.g. "1-Year RAPM Measures"),
 //   glossary:     the glossary file (only its tooltips are used here, to decide where the "i" button goes)
 // }
-import { escapeHtml } from './text.js?v=5afac4d2e6';
-import { formatValue } from './format.js?v=5afac4d2e6';
-import { colorStep, shownNumber } from './ranks.js?v=5afac4d2e6';
-import { sourceTag } from './columns.js?v=5afac4d2e6';
+import { escapeHtml } from './text.js?v=b3e8ff2edc';
+import { formatValue } from './format.js?v=b3e8ff2edc';
+import { colorStep, shownNumber } from './ranks.js?v=b3e8ff2edc';
+import { sourceTag } from './columns.js?v=b3e8ff2edc';
 
 const BLANK_MARK = '–';
 

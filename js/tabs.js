@@ -1,7 +1,7 @@
 // The category tabs: a tab row on desktop and a dropdown on phones (CSS shows one of them). The elements are created
 // once from the manifest; after that only their state is updated, so keyboard focus is never lost.
-import { escapeHtml } from './text.js?v=5afac4d2e6';
-import { tabIsEmpty } from './columns.js?v=5afac4d2e6';
+import { escapeHtml } from './text.js?v=b3e8ff2edc';
+import { tabIsEmpty } from './columns.js?v=b3e8ff2edc';
 
 export function buildTabs(tabsRow, tabSelect, tabs) {
   tabsRow.innerHTML = tabs.map((tab, index) =>

@@ -1,28 +1,29 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js?v=5afac4d2e6';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=5afac4d2e6';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=5afac4d2e6';
-import { naturalSortDirection, sortRows } from './sorting.js?v=5afac4d2e6';
+import { loadManifest, loadGlossary, loadSeason } from './data.js?v=b3e8ff2edc';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=b3e8ff2edc';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=b3e8ff2edc';
+import { naturalSortDirection, sortRows } from './sorting.js?v=b3e8ff2edc';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=5afac4d2e6';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=5afac4d2e6';
-import { tableHtml } from './table.js?v=5afac4d2e6';
-import { fitColumns } from './measure.js?v=5afac4d2e6';
-import { buildTabs, updateTabs } from './tabs.js?v=5afac4d2e6';
-import { pickerHtml, pickerLabel } from './picker.js?v=5afac4d2e6';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=5afac4d2e6';
-import { setUpTooltip } from './tooltip.js?v=5afac4d2e6';
-import { escapeHtml } from './text.js?v=5afac4d2e6';
+} from './columns.js?v=b3e8ff2edc';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=b3e8ff2edc';
+import { tableHtml } from './table.js?v=b3e8ff2edc';
+import { fitColumns } from './measure.js?v=b3e8ff2edc';
+import { buildTabs, updateTabs } from './tabs.js?v=b3e8ff2edc';
+import { pickerHtml, pickerLabel } from './picker.js?v=b3e8ff2edc';
+import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=b3e8ff2edc';
+import { setUpTooltip } from './tooltip.js?v=b3e8ff2edc';
+import { escapeHtml } from './text.js?v=b3e8ff2edc';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
 const RESIZE_DELAY_MS = 120;
 const RANK_MODE_KEY = 'ah-rank-mode';
 const RANK_MODES = ['rank', 'percentile'];
+const PLAYER_KEY = 'Player';                 // always shown, frozen, not in the picker
 const POSITION_ORDER = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 // Which filter each input edits, and which input a removed chip hands focus back to.
@@ -42,6 +43,7 @@ const state = {
   filters: emptyFilters(),
   sort: null,              // { key, direction }
   picks: new Map(),        // tab name -> Set of picked column keys (created from the manifest defaults on first use)
+  infoPicks: new Set(),    // Team, Pos, Age, GP, MP keys that are shown; one choice for all tabs (filled in start)
   filtersOpen: false,      // phone only
   rankMode: savedRankMode(),   // 'rank' | 'percentile': which number sits beside each value
   selected: new Map(),     // players ticked for compare: EntityId -> name; kept across tabs, seasons and RS/PO
@@ -50,6 +52,7 @@ const state = {
 let manifest;
 let glossary;
 let columnsByKey;
+let infoColumns;           // the manifest's base columns after Player: the ones the visitor may hide
 let bannerTitles;
 let season = null;         // the season file on screen; null while loading or after a load error
 let status = 'loading';    // loading | ready | error (for the test hook)
@@ -284,8 +287,9 @@ function renderMain() {
 
 function renderTable(tab) {
   const { shownKeys } = splitPickedColumns(tab, picksOf(tab), emptyKeys);
-  const columns = [...manifest.base_columns, ...shownKeys].map((key) => columnsByKey.get(key));
-  ensureSortColumn(columns);
+  const shownInfoKeys = infoColumns.map((column) => column.key).filter((key) => state.infoPicks.has(key));
+  const columns = [PLAYER_KEY, ...shownInfoKeys, ...shownKeys].map((key) => columnsByKey.get(key));
+  ensureSortColumn(columns, shownKeys);
 
   const rows = sortRows(shownRows, season, columnsByKey.get(state.sort.key), state.sort.direction);
   const rankTables = buildRankTables(columns, season, rankPoolRows);
@@ -300,10 +304,11 @@ function renderTable(tab) {
   fitCurrentTable();
 }
 
-// Keeps the sort if its column is still on screen, otherwise sorts by the tab's first data column.
-function ensureSortColumn(columns) {
+// Keeps the sort if its column is still on screen, otherwise sorts by the tab's first shown stat column (MP when the
+// visitor hid them all).
+function ensureSortColumn(columns, shownStatKeys) {
   if (state.sort && columns.some((column) => column.key === state.sort.key)) return;
-  const first = columns[manifest.base_columns.length] ?? columnsByKey.get('MP');
+  const first = columnsByKey.get(shownStatKeys[0] ?? 'MP');
   state.sort = { key: first.key, direction: naturalSortDirection(first) };
 }
 
@@ -326,7 +331,7 @@ function renderCredits() {
 
 function renderPicker() {
   const tab = currentTab();
-  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), emptyKeys, columnsByKey, bannerTitles);
+  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), infoColumns, state.infoPicks, emptyKeys, columnsByKey, bannerTitles);
   updatePickerLabel();
 }
 
@@ -459,6 +464,7 @@ function pickColumns(action) {
   const tab = currentTab();
   const wanted = (column) => action === 'all' || (action === 'default' && column.default_visible);
   state.picks.set(tab.name, new Set(tab.columns.filter(wanted).map((column) => column.key)));
+  if (action !== 'none') state.infoPicks = new Set(infoColumns.map((column) => column.key));   // Default and All bring back the player-info columns too
   renderPicker();
   renderResults();
 }
@@ -533,8 +539,9 @@ function wirePicker() {
     if (action) pickColumns(action.dataset.pickAction);
   });
   $('picker').addEventListener('change', (event) => {
-    const key = event.target.dataset.pick;
-    const picks = picksOf(currentTab());
+    const infoKey = event.target.dataset.infoPick;
+    const key = infoKey ?? event.target.dataset.pick;
+    const picks = infoKey ? state.infoPicks : picksOf(currentTab());
     if (event.target.checked) picks.add(key); else picks.delete(key);
     updatePickerLabel();
     renderResults();
@@ -623,6 +630,8 @@ async function start() {
     return;
   }
   columnsByKey = indexColumnsByKey(manifest);
+  infoColumns = manifest.base_columns.filter((key) => key !== PLAYER_KEY).map((key) => columnsByKey.get(key));
+  state.infoPicks = new Set(infoColumns.map((column) => column.key));
   bannerTitles = indexBannerTitles(glossary);
 
   const requestedTab = new URLSearchParams(location.search).get('tab');   // the glossary links back with ?tab=
