@@ -1,22 +1,22 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js?v=dece3f1832';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=dece3f1832';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=dece3f1832';
-import { naturalSortDirection, sortRows } from './sorting.js?v=dece3f1832';
+import { loadManifest, loadGlossary, loadSeason } from './data.js?v=5afac4d2e6';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=5afac4d2e6';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=5afac4d2e6';
+import { naturalSortDirection, sortRows } from './sorting.js?v=5afac4d2e6';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=dece3f1832';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=dece3f1832';
-import { tableHtml } from './table.js?v=dece3f1832';
-import { fitColumns } from './measure.js?v=dece3f1832';
-import { buildTabs, updateTabs } from './tabs.js?v=dece3f1832';
-import { pickerHtml, pickerLabel } from './picker.js?v=dece3f1832';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=dece3f1832';
-import { setUpTooltip } from './tooltip.js?v=dece3f1832';
-import { escapeHtml } from './text.js?v=dece3f1832';
+} from './columns.js?v=5afac4d2e6';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=5afac4d2e6';
+import { tableHtml } from './table.js?v=5afac4d2e6';
+import { fitColumns } from './measure.js?v=5afac4d2e6';
+import { buildTabs, updateTabs } from './tabs.js?v=5afac4d2e6';
+import { pickerHtml, pickerLabel } from './picker.js?v=5afac4d2e6';
+import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=5afac4d2e6';
+import { setUpTooltip } from './tooltip.js?v=5afac4d2e6';
+import { escapeHtml } from './text.js?v=5afac4d2e6';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
@@ -379,8 +379,8 @@ function setFilter(name, raw) {
 
 function clearFilter(chipName) {
   if (chipName === 'compare') {
-    setCompare(false);
-    $('compare-btn').focus({ preventScroll: true });
+    showAll();
+    $('table-wrap').focus({ preventScroll: true });   // the Compare button is disabled again, so it cannot take focus
     return;
   }
   const fresh = emptyFilters();
@@ -399,6 +399,12 @@ function resetFilters() {
   state.compare = false;
   renderResults();
   syncFilterInputs(true);
+}
+
+// "Show all" (button or chip): leaves the compare view and unticks every player, so the Compare button starts over at 0.
+function showAll() {
+  state.selected.clear();
+  setCompare(false);
 }
 
 function setCompare(on) {
@@ -491,7 +497,7 @@ function wireToolbar() {
   }
   $('season').addEventListener('change', (event) => showSeason(state.type, event.target.value));
   $('filters-btn').addEventListener('click', () => setFiltersOpen(!state.filtersOpen));
-  $('compare-btn').addEventListener('click', () => setCompare(!state.compare));
+  $('compare-btn').addEventListener('click', () => { if (state.compare) showAll(); else setCompare(true); });
 
   $('toolbar').addEventListener('input', (event) => {
     const name = FILTER_OF_INPUT[event.target.id];
@@ -597,6 +603,7 @@ function installTestHook() {
     setRankMode,
     select: (entityId, on = true) => toggleSelected(entityId, season.cols.Player[season.id.indexOf(entityId)], on),   // a player of the season on screen
     setCompare,
+    showAll,
     rankOf: (entityId, key) => numberOver(entityId, key, lookupRank),
     percentileOf: (entityId, key) => numberOver(entityId, key, lookupPercentile),
     state: () => ({

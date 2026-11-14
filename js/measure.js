@@ -6,8 +6,8 @@
 //
 // Widths are measured on real hidden spans that use the table's own fonts, so nothing is guessed: digits are the same
 // width in the table (tabular numbers), so every distinct value "shape" (digits replaced by 0) is measured once.
-import { cellText, headerPieces } from './table.js?v=dece3f1832';
-import { escapeHtml } from './text.js?v=dece3f1832';
+import { cellText, headerPieces } from './table.js?v=5afac4d2e6';
+import { escapeHtml } from './text.js?v=5afac4d2e6';
 
 const CANDIDATE_TEXT_LIMIT = 10;   // text columns: only the longest few strings can be the widest
 const SAFETY_PIXELS = 1;           // absorbs sub-pixel rounding

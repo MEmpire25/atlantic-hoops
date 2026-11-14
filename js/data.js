@@ -1,7 +1,7 @@
 // Loads the data files. Only the manifest, the glossary and the season being viewed are ever fetched, and each file is
 // fetched once: later requests reuse the cached promise. URLs are relative so the site works from a sub-path
 // (GitHub Pages project site).
-import { normalizeForSearch } from './text.js?v=dece3f1832';
+import { normalizeForSearch } from './text.js?v=5afac4d2e6';
 
 const cache = new Map();
 
