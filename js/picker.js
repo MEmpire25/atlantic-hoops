@@ -1,7 +1,7 @@
 // The "Columns" picker of the active tab: first the player-info columns (Team, Pos, ...; one choice shared by all tabs, no
 // heading), a gap, then one checkbox per column of the tab. Defaults come from the manifest.
-import { escapeHtml } from './text.js?v=eeb1ada6db';
-import { sourceTag } from './columns.js?v=eeb1ada6db';
+import { escapeHtml } from './text.js?v=5f3ae5be70';
+import { sourceTag } from './columns.js?v=5f3ae5be70';
 
 function infoItemHtml(column, infoPicks) {
   return `<label class="pk-item"><input type="checkbox" data-info-pick="${escapeHtml(column.key)}"${infoPicks.has(column.key) ? ' checked' : ''}> ` +

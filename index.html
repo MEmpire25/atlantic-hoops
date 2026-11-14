@@ -7,9 +7,9 @@
 <title>Atlantic Hoops | Player stats</title>
 <link rel="icon" href="data:,">   <!-- no logo, so an empty icon keeps the browser asking for /favicon.ico -->
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/tokens.css?v=eeb1ada6db">
-<link rel="stylesheet" href="css/site.css?v=eeb1ada6db">
-<script src="js/theme.js?v=eeb1ada6db"></script>
+<link rel="stylesheet" href="css/tokens.css?v=5f3ae5be70">
+<link rel="stylesheet" href="css/site.css?v=5f3ae5be70">
+<script src="js/theme.js?v=5f3ae5be70"></script>
 </head>
 <body class="filters-closed">
 <header class="top">
@@ -38,18 +38,33 @@
 </div>
 
 <section class="toolbar" id="toolbar" aria-label="Season and filters">
-  <div class="fld"><span id="label-type">Season type</span>
+  <div class="fld"><div class="lbl-row"><span id="label-type">Season type</span>
+      <button type="button" role="switch" id="multi-switch" class="mini-switch" aria-checked="false" aria-label="Multi seasons" data-tip="Multi: combine several seasons into one table of averages." data-tip-href="glossary.html#multi-mode"><span aria-hidden="true">Multi</span><span class="ms-track" aria-hidden="true"><span class="ms-knob"></span></span></button>
+    </div>
     <div class="seg" role="group" aria-labelledby="label-type">
       <button type="button" id="type-rs" data-type="rs" aria-pressed="true">Regular Season</button>
       <button type="button" id="type-po" data-type="po" aria-pressed="false">Playoffs</button>
     </div></div>
-  <label class="fld"><span>Season</span><select id="season"></select></label>
+  <div class="fld"><span id="label-season">Season</span>
+    <select id="season" aria-labelledby="label-season"></select>
+    <div class="season-wrap" hidden id="season-multi">
+      <button type="button" class="selbtn" id="season-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="season-pop" aria-labelledby="label-season season-btn"></button>
+      <div id="season-pop" role="group" aria-label="Seasons" hidden>
+        <div class="sp-head"><b>Seasons</b><span id="sp-count"></span></div>
+        <div id="sp-list"></div>
+        <div class="sp-foot">
+          <button type="button" class="link-btn" id="season-cancel">Cancel</button>
+          <button type="button" class="btn primary" id="season-apply">Apply</button>
+        </div>
+      </div>
+    </div></div>
   <label class="fld filter-field" data-filter="search"><span>Player</span><input id="f-q" type="search" placeholder="Search name" autocomplete="off"></label>
   <label class="fld filter-field" data-filter="pos"><span>Pos</span><select id="f-pos"></select></label>
-  <label class="fld filter-field" data-filter="team"><span>Team</span><select id="f-team"></select></label>
-  <label class="fld filter-field" data-filter="minMp"><span>Min MP <small id="mp-hint"></small></span><input id="f-mp" type="number" inputmode="numeric" step="1"></label>
+  <label class="fld filter-field" data-filter="team" data-single-only><span>Team</span><select id="f-team"></select></label>
+  <label class="fld filter-field" data-filter="minSeasons" data-multi-only hidden><span>Min seasons</span><select id="f-min-seasons"></select></label>
+  <label class="fld filter-field" data-filter="minMp"><span id="mp-label">Min MP</span><input id="f-mp" type="number" inputmode="numeric" step="1"></label>
   <label class="fld filter-field" data-filter="minGp"><span>Min GP</span><input id="f-gp" type="number" inputmode="numeric" step="1" min="0"></label>
-  <div class="fld filter-field" data-filter="age" role="group" aria-label="Age range"><span>Age</span>
+  <div class="fld filter-field" data-filter="age" data-single-only role="group" aria-label="Age range"><span>Age</span>
     <span class="pair"><input id="f-age-min" type="number" inputmode="numeric" min="0" aria-label="Minimum age"><span aria-hidden="true">&ndash;</span><input id="f-age-max" type="number" inputmode="numeric" min="0" aria-label="Maximum age"></span></div>
   <button type="button" class="btn filter-field" data-reset>Reset</button>
   <div class="right-tools">
@@ -73,23 +88,29 @@
 </section>
 
 <div id="chips" class="chips" aria-label="Active filters"></div>
+<div id="flash" class="notice flash" role="status" hidden></div>
 <div id="notice" class="notice" role="status" hidden></div>
 <div id="selection-note" class="notice" role="status" hidden></div>
+<p id="multi-note" class="multi-note" hidden></p>
 <div class="meta">
   <span id="count" aria-live="polite"></span>
   <span class="legend" id="legend"></span>
 </div>
 
 <div id="panel" role="tabpanel">
+  <div id="loading-bar" class="progress" hidden></div>
   <div id="table-wrap" class="table-wrap" tabindex="0" aria-label="Player stats table (scrolls sideways)"><table id="grid"></table></div>
+  <div id="overlay" class="overlay" role="status" hidden></div>
   <div id="state-panel" hidden></div>
 </div>
 
 <footer>
   <div id="credits" hidden></div>
 </footer>
+<div id="backdrop" hidden></div>
 <div id="tip" role="region" aria-label="Column help" hidden></div>
+<div id="hint" role="status" hidden></div>
 
-<script type="module" src="js/main.js?v=eeb1ada6db"></script>
+<script type="module" src="js/main.js?v=5f3ae5be70"></script>
 </body>
 </html>

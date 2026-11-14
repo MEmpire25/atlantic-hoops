@@ -59,7 +59,6 @@ a { color: var(--accent); }
 /* ---------- toolbar ---------- */
 .toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; padding: 10px var(--gutter) 6px; }
 .fld { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-label); color: var(--text2); }
-.fld small { color: var(--text3); font-size: var(--fs-label); }
 .fld input, .fld select { height: var(--control-height); min-width: 0; padding: 2px 6px; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius-small); color: var(--text); }
 .fld.is-set input, .fld.is-set select { border-color: var(--accent); }
 .fld.is-set > span { color: var(--accent); }
@@ -192,9 +191,68 @@ body.percentile-mode .legend .rank { height: auto; margin-left: var(--chip-pad-l
 @keyframes shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }
 
+/* ---------- Multi seasons mode ---------- */
+/* Season type's label line also holds the "Multi" switch, right-aligned over the Playoffs button. Every field's label line has the
+   same height, so the switch's track never makes one field taller than the rest. */
+.fld > span:first-child, .lbl-row { min-height: var(--label-row-height); }
+.lbl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mini-switch { position: relative; flex: none; display: inline-flex; align-items: center; gap: 6px; height: var(--label-row-height); padding: 0; background: none; border: 0; border-radius: var(--radius-small); color: var(--text2); font: inherit; cursor: pointer; white-space: nowrap; }
+/* The click area is taller than the switch it draws; it reaches up into the empty padding above the label line, and
+   only 2px down, so it never covers the buttons below. */
+.mini-switch::after { content: ""; position: absolute; left: -4px; right: -4px; top: calc(var(--label-row-height) + 2px - var(--switch-hit)); bottom: -2px; }
+.mini-switch:hover, .mini-switch[aria-checked="true"] { color: var(--text); }
+.ms-track { position: relative; flex: none; width: var(--switch-track-width); height: var(--switch-track-height); border-radius: calc(var(--switch-track-height) / 2); background: var(--ctl); transition: background .12s; }
+.ms-knob { position: absolute; left: var(--switch-knob-inset); top: var(--switch-knob-inset); width: var(--switch-knob); height: var(--switch-knob); border-radius: 50%; background: var(--text); transition: left .12s; }
+.mini-switch[aria-checked="true"] .ms-track { background: var(--accent-fill); }
+.mini-switch[aria-checked="true"] .ms-knob { left: calc(var(--switch-track-width) - var(--switch-knob) - var(--switch-knob-inset)); background: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .ms-track, .ms-knob { transition: none; } }
+
+/* Season button: looks like the single-season select, opens the checklist */
+.season-wrap { position: relative; }
+.selbtn { position: relative; width: var(--season-btn-width); height: var(--control-height); padding: 2px 22px 2px 6px; text-align: left; white-space: nowrap; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-small); color: var(--text); cursor: pointer; }
+.selbtn::after { content: ""; position: absolute; right: 8px; top: 50%; margin-top: -2px; border: 4px solid transparent; border-top-color: var(--text2); border-bottom: 0; }
+.fld select#f-min-seasons { width: 68px; }
+#season-pop { position: absolute; z-index: 40; left: 0; top: calc(100% + 4px); width: var(--popover-width); padding: 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: 8px; box-shadow: var(--shadow); }
+.sp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; color: var(--text); font-weight: 650; }
+.sp-head span { font-weight: 400; color: var(--text2); font-size: var(--fs-note); }
+#sp-list { columns: 2; column-gap: 10px; }
+.sp-row { display: flex; align-items: center; gap: 6px; min-height: 26px; break-inside: avoid; color: var(--text); cursor: pointer; }
+.sp-row em { font-style: normal; font-size: var(--fs-label); color: var(--text3); }
+.sp-row.is-off { color: var(--text3); cursor: not-allowed; }
+.sp-row input { accent-color: var(--accent-fill); width: 14px; height: 14px; margin: 0; }
+.sp-row input:disabled { cursor: not-allowed; }
+.sp-foot { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.btn.primary { background: var(--accent-fill); border-color: var(--accent-fill); color: var(--ink); font-weight: 700; }
+.btn.primary:hover { border-color: var(--text); }
+.link-btn { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
+#backdrop { position: fixed; inset: 0; z-index: 35; background: rgba(0, 0, 0, .55); }
+
+/* Note line, one-time notice, "fewer seasons" cells */
+.multi-note { margin: 4px var(--gutter) 2px; color: var(--text2); font-size: var(--fs-note); }
+.multi-note b { color: var(--text); font-weight: 600; }
+.flash { display: flex; align-items: flex-start; gap: 8px; }
+.flash span { flex: 1; }
+.flash button { background: none; border: 0; color: var(--text2); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 2px; }
+.legend .fewer-key { font-style: italic; color: var(--text2); margin-left: 12px; }
+td.fewer .value { font-style: italic; color: var(--text2); }
+td[data-tip] { cursor: help; }
+.pk-note { margin: 8px 0 0; font-size: var(--fs-note); color: var(--text3); }
+
+/* Loading and error in Multi: the old table stays, dimmed, with a message on top. The panel is positioned only while busy:
+   as a positioned box all the time it changed how the browser renders the text of the whole page. */
+#panel.is-busy { position: relative; }
+.table-wrap.is-dim { opacity: .4; pointer-events: none; }
+.overlay { position: absolute; z-index: 20; left: 50%; top: 90px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 10px 16px; text-align: center; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); box-shadow: var(--shadow); color: var(--text); }
+.overlay.is-error { border-color: var(--err); }
+.overlay.is-error b { color: var(--err); }
+.progress { position: absolute; z-index: 21; left: var(--gutter); right: var(--gutter); top: 0; height: 2px; overflow: hidden; background: var(--line); }
+.progress::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 35%; background: var(--accent); animation: slide 1s ease-in-out infinite; }
+@keyframes slide { from { left: -35%; } to { left: 100%; } }
+@media (prefers-reduced-motion: reduce) { .progress::after { animation: none; width: 100%; } }
+
 /* ---------- header tooltip ---------- */
-#tip { position: fixed; z-index: 60; max-width: var(--tooltip-width); padding: 8px 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); box-shadow: var(--shadow); font-size: var(--fs-note); }
-#tip p { margin: 4px 0; color: var(--text2); }
+#tip, #hint { position: fixed; z-index: 60; max-width: var(--tooltip-width); padding: 8px 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); box-shadow: var(--shadow); font-size: var(--fs-note); }
+#tip p, #hint p { margin: 4px 0; color: var(--text2); }
 .tip-title { font-weight: 700; color: var(--text); }
 
 footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(--fs-note); }
@@ -214,6 +272,9 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
 .entry p { margin: 4px 0; color: var(--text2); }
 .entry .group-name { font-size: var(--fs-label); font-weight: 400; color: var(--accent); margin-left: 8px; }
 .entry .read b, .entry .credit b { color: var(--text); }
+.multi-glossary { margin: 0 0 26px; scroll-margin-top: 12px; }
+.multi-glossary p { margin: 4px 0; color: var(--text2); }
+.multi-glossary.is-linked h2 { color: var(--accent); }
 .compact-title { margin: 10px 0 4px; font-size: var(--fs-body); color: var(--text2); }
 .compact { margin: 0; padding: 0; list-style: none; columns: 2 320px; column-gap: 24px; font-size: var(--fs-note); }
 .compact li { break-inside: avoid; margin: 0 0 6px; padding: 2px 4px; border: 1px solid transparent; border-radius: 4px; scroll-margin-top: 12px; color: var(--text2); }
@@ -238,4 +299,17 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
   body.filters-closed .filter-field { display: none; }
   body.filters-closed .toolbar { padding-bottom: 2px; }
   body.filters-closed .table-wrap { max-height: var(--table-max-height-phone-collapsed); }
+  /* Multi: the season button grows with its label; the checklist becomes a bottom sheet */
+  .selbtn { width: auto; min-width: var(--season-btn-width); }
+  .mini-switch { --switch-hit: var(--switch-hit-phone); }
+  .multi-note, .flash { margin-left: var(--gutter-phone); margin-right: var(--gutter-phone); }
+  .progress { left: var(--gutter-phone); right: var(--gutter-phone); }
+  #season-pop { position: fixed; left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: var(--sheet-max-height); display: flex; flex-direction: column; border-radius: 12px 12px 0 0; padding: 12px 14px 14px; }
+  #sp-list { overflow: auto; }
+  .sp-row { min-height: var(--sheet-row-height); font-size: var(--fs-phone-control); }
+  .sp-row input { width: 20px; height: 20px; }
+  .sp-foot { margin-top: 6px; }
+  .sp-foot .btn { flex: 1; }
+  .sp-foot .link-btn { padding: 12px 8px; font-size: var(--fs-phone-control); }
+  #picker { z-index: 40; }
 }

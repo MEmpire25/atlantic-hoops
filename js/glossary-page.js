@@ -1,9 +1,10 @@
 // Glossary page. One section per stats tab, in tab order. Columns with a glossary text get a full entry; the others
 // (the self-evident ones) are listed compactly with their tooltip. Every column has an anchor, so every header
 // tooltip on the stats page can link to the right place. All text comes from glossary.json.
-import { loadManifest, loadGlossary } from './data.js?v=eeb1ada6db';
-import { indexColumnsByKey, indexBannerTitles } from './columns.js?v=eeb1ada6db';
-import { escapeHtml, columnAnchorId } from './text.js?v=eeb1ada6db';
+import { loadManifest, loadGlossary } from './data.js?v=5f3ae5be70';
+import { indexColumnsByKey, indexBannerTitles } from './columns.js?v=5f3ae5be70';
+import { escapeHtml, columnAnchorId } from './text.js?v=5f3ae5be70';
+import { MULTI_GLOSSARY, MULTI_ANCHOR } from './multi-copy.js?v=5f3ae5be70';
 
 const byName = (a, b) => a.name.localeCompare(b.name);
 
@@ -30,6 +31,14 @@ function sectionHtml(id, title, tabName, columns, glossary, bannerTitles) {
       ? `<h3 class="compact-title">Also in this section</h3><ul class="compact">${withoutEntry.map((column) => compactItemHtml(column, glossary.entries[column.key])).join('')}</ul>`
       : '') +
     '</section>';
+}
+
+// The Multi mode text, after the column sections. Not a column entry: the Multi switch tooltip and the Seasons header
+// tooltip link to its anchor.
+function multiGlossaryHtml() {
+  return `<div class="multi-glossary" id="${MULTI_ANCHOR}"><h2>${escapeHtml(MULTI_GLOSSARY.title)}</h2>` +
+    MULTI_GLOSSARY.paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('') +
+    '</div>';
 }
 
 // Jump to the entry named in the link and highlight it. The browser only does this itself for ids that exist when the
@@ -63,9 +72,11 @@ async function start() {
   });
 
   document.getElementById('section-nav').innerHTML = sections
-    .map((section) => `<li><a href="#${section.id}">${escapeHtml(section.title)}</a></li>`).join('');
+    .map((section) => `<li><a href="#${section.id}">${escapeHtml(section.title)}</a></li>`).join('') +
+    `<li><a href="#${MULTI_ANCHOR}">${escapeHtml(MULTI_GLOSSARY.title)}</a></li>`;
   document.getElementById('sections').innerHTML = sections
-    .map((section) => sectionHtml(section.id, section.title, section.tabName, section.columns, glossary, bannerTitles)).join('');
+    .map((section) => sectionHtml(section.id, section.title, section.tabName, section.columns, glossary, bannerTitles)).join('') +
+    multiGlossaryHtml();
   scrollToLinkedEntry();
 }
 

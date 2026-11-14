@@ -2,7 +2,7 @@
 //
 // view = {
 //   columns:      manifest entries to show, in order (Player first),
-//   season:       the loaded season file,
+//   season:       the loaded season file, or in Multi mode the aggregated one (see multi.js),
 //   rows:         row indexes in display order,
 //   rankTables:   Map key -> rank table (columns without one show no rank),
 //   selected:     Map EntityId -> name of the players ticked for compare (their checkboxes are drawn checked),
@@ -12,10 +12,11 @@
 //   bannerTitles: Map key -> banner title (groups of columns, e.g. "1-Year RAPM Measures"),
 //   glossary:     the glossary file (only its tooltips are used here, to decide where the "i" button goes)
 // }
-import { escapeHtml } from './text.js?v=eeb1ada6db';
-import { formatValue } from './format.js?v=eeb1ada6db';
-import { colorStep, shownNumber } from './ranks.js?v=eeb1ada6db';
-import { sourceTag } from './columns.js?v=eeb1ada6db';
+import { escapeHtml } from './text.js?v=5f3ae5be70';
+import { formatValue } from './format.js?v=5f3ae5be70';
+import { colorStep, shownNumber } from './ranks.js?v=5f3ae5be70';
+import { sourceTag } from './columns.js?v=5f3ae5be70';
+import { multiCellNote } from './multi.js?v=5f3ae5be70';
 
 const BLANK_MARK = '–';
 
@@ -116,9 +117,13 @@ function cellHtml(row, column, view) {
   if (value === null) {
     return `<td class="num blank${sortedClass}"><span class="value">${BLANK_MARK}</span></td>`;
   }
+  // Multi mode: some cells carry a tooltip, and values built from fewer seasons than the player has are shown muted.
+  const note = view.season.contributed ? multiCellNote(view.season, column, row) : null;
+  const noteClasses = `${sortedClass}${note?.fewer ? ' fewer' : ''}`;
+  const noteAttribute = note ? ` data-tip="${escapeHtml(note.text)}"` : '';
   const rankTable = view.rankTables.get(column.key);
-  if (!rankTable) return `<td class="num${sortedClass}"><span class="value">${formatValue(value, column)}</span></td>`;
-  return `<td class="num d${view.rankDigits.get(column.key)}${sortedClass}"><span class="value">${formatValue(value, column)}</span>` +
+  if (!rankTable) return `<td class="num${noteClasses}"${noteAttribute}><span class="value">${formatValue(value, column)}</span></td>`;
+  return `<td class="num d${view.rankDigits.get(column.key)}${noteClasses}"${noteAttribute}><span class="value">${formatValue(value, column)}</span>` +
     `${rankHtml(rankTable, value, view.rankMode)}</td>`;
 }
 

@@ -32,9 +32,10 @@ export function defaultPicks(tab) {
   return new Set(tab.columns.filter((column) => column.default_visible).map((column) => column.key));
 }
 
-// Columns with no value at all in this season file ("Explain": the tab or column is kept but marked as having no data).
-export function emptyColumnKeys(manifest, seasonType, seasonLabel) {
-  const present = new Set(manifest.non_empty_columns[seasonType][seasonLabel]);
+// Columns with no value at all in these season files ("Explain": the tab or column is kept but marked as having no data).
+// One season in single mode, every ticked season in Multi: a column is empty only if it is empty in all of them.
+export function emptyColumnKeys(manifest, seasonType, seasonLabels) {
+  const present = new Set(seasonLabels.flatMap((label) => manifest.non_empty_columns[seasonType][label]));
   const empty = new Set();
   for (const column of manifest.columns) {
     if (!present.has(column.key)) empty.add(column.key);

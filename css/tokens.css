@@ -105,6 +105,19 @@ html[data-theme="light"] {
   --tooltip-width: 260px;
   --picker-width: 290px;
 
+  /* Multi seasons mode: the "Multi" switch, the season button and its checklist (popover; bottom sheet on a phone) */
+  --label-row-height: 1lh;        /* every field's label line is as tall as one line of label text, so the Multi switch's track does not make one field taller */
+  --switch-track-width: 28px;
+  --switch-track-height: 16px;
+  --switch-knob: 12px;
+  --switch-knob-inset: 2px;
+  --switch-hit: 24px;             /* invisible click area height (reaches up into the padding above the label line) */
+  --switch-hit-phone: 32px;
+  --season-btn-width: 150px;
+  --popover-width: 250px;
+  --sheet-row-height: 44px;
+  --sheet-max-height: 78vh;
+
   /* compare checkbox before each player name (drawn inside the Player cell's left padding) */
   --pick-left: 5px;        /* clears the orange hover edge (--hover-edge, 3px) with a 2px gap */
   --pick-size: 9px;

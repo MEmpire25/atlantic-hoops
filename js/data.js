@@ -1,7 +1,7 @@
 // Loads the data files. Only the manifest, the glossary and the season being viewed are ever fetched, and each file is
 // fetched once: later requests reuse the cached promise. URLs are relative so the site works from a sub-path
 // (GitHub Pages project site).
-import { normalizeForSearch } from './text.js?v=eeb1ada6db';
+import { normalizeForSearch } from './text.js?v=5f3ae5be70';
 
 const cache = new Map();
 
@@ -32,4 +32,9 @@ export async function loadSeason(seasonType, seasonLabel) {
   const file = await fetchJsonOnce(`data/${seasonType}/${seasonLabel}.json`);
   if (!file.searchNames) file.searchNames = file.cols.Player.map(normalizeForSearch);
   return file;
+}
+
+// Several season files at once (Multi mode), in the order asked for. One failed file fails the whole request.
+export function loadSeasons(seasonType, seasonLabels) {
+  return Promise.all(seasonLabels.map((label) => loadSeason(seasonType, label)));
 }

@@ -1,22 +1,26 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js?v=eeb1ada6db';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=eeb1ada6db';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=eeb1ada6db';
-import { naturalSortDirection, sortRows } from './sorting.js?v=eeb1ada6db';
+import { loadManifest, loadGlossary, loadSeason, loadSeasons } from './data.js?v=5f3ae5be70';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=5f3ae5be70';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=5f3ae5be70';
+import { naturalSortDirection, sortRows } from './sorting.js?v=5f3ae5be70';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=eeb1ada6db';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=eeb1ada6db';
-import { tableHtml } from './table.js?v=eeb1ada6db';
-import { fitColumns } from './measure.js?v=eeb1ada6db';
-import { buildTabs, updateTabs } from './tabs.js?v=eeb1ada6db';
-import { pickerHtml, pickerLabel } from './picker.js?v=eeb1ada6db';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=eeb1ada6db';
-import { setUpTooltip } from './tooltip.js?v=eeb1ada6db';
-import { escapeHtml } from './text.js?v=eeb1ada6db';
+} from './columns.js?v=5f3ae5be70';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=5f3ae5be70';
+import { tableHtml } from './table.js?v=5f3ae5be70';
+import { fitColumns } from './measure.js?v=5f3ae5be70';
+import { buildTabs, updateTabs } from './tabs.js?v=5f3ae5be70';
+import { pickerHtml, pickerLabel } from './picker.js?v=5f3ae5be70';
+import { loadingHtml, errorHtml, noResultsHtml, noMinSeasonsHtml, emptyTabHtml, busyHtml, busyErrorHtml } from './panels.js?v=5f3ae5be70';
+import { setUpTooltip } from './tooltip.js?v=5f3ae5be70';
+import { setUpHint } from './hint.js?v=5f3ae5be70';
+import { aggregateSeasons } from './multi.js?v=5f3ae5be70';
+import { MULTI_NOTE_HTML, SEASONS_KEY, SEASONS_COLUMN, SEASONS_ENTRY } from './multi-copy.js?v=5f3ae5be70';
+import { checklistHtml, seasonButtonLabel, seasonButtonTip } from './season-list.js?v=5f3ae5be70';
+import { escapeHtml } from './text.js?v=5f3ae5be70';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
@@ -28,9 +32,9 @@ const POSITION_ORDER = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 // Which filter each input edits, and which input a removed chip hands focus back to.
 const FILTER_OF_INPUT = {
-  'f-q': 'search', 'f-pos': 'pos', 'f-team': 'team', 'f-mp': 'minMp', 'f-gp': 'minGp', 'f-age-min': 'ageMin', 'f-age-max': 'ageMax',
+  'f-q': 'search', 'f-pos': 'pos', 'f-team': 'team', 'f-min-seasons': 'minSeasons', 'f-mp': 'minMp', 'f-gp': 'minGp', 'f-age-min': 'ageMin', 'f-age-max': 'ageMax',
 };
-const INPUT_OF_CHIP = { search: 'f-q', pos: 'f-pos', team: 'f-team', minMp: 'f-mp', minGp: 'f-gp', age: 'f-age-min' };
+const INPUT_OF_CHIP = { search: 'f-q', pos: 'f-pos', team: 'f-team', minSeasons: 'f-min-seasons', minMp: 'f-mp', minGp: 'f-gp', age: 'f-age-min' };
 
 const $ = (id) => document.getElementById(id);
 const phone = window.matchMedia(PHONE_QUERY);
@@ -38,7 +42,9 @@ const phone = window.matchMedia(PHONE_QUERY);
 // ---------- state ----------
 const state = {
   type: 'rs',
-  season: null,
+  season: null,            // the season of single mode
+  multi: false,            // true: Multi mode, the table combines the ticked seasons
+  ticked: [],              // Multi only: the seasons combined, newest first
   tab: null,
   filters: emptyFilters(),
   sort: null,              // { key, direction }
@@ -52,22 +58,38 @@ const state = {
 let manifest;
 let glossary;
 let columnsByKey;
-let infoColumns;           // the manifest's base columns after Player: the ones the visitor may hide
+let singleInfoColumns;     // the manifest's base columns after Player: the ones the visitor may hide
 let bannerTitles;
-let season = null;         // the season file on screen; null while loading or after a load error
+let season = null;         // the data on screen: one season file, or in Multi the aggregated table; null while loading or after a load error
 let status = 'loading';    // loading | ready | error (for the test hook)
-let emptyKeys = new Set(); // columns with no data in this season
+let emptyKeys = new Set(); // columns with no data in the season(s) on screen
 let shownRows = [];        // indexes passing the filters, source order
 let rankPoolRows = [];     // indexes the ranks are computed over (see rankPool)
 let view = null;           // what the table currently shows, null while a message panel is shown
 let latestRequest = 0;
-let retryRequest = null;
+let seasonDraft = new Set();   // seasons ticked in the open checklist, not applied yet
 let tooltip;
+let hint;
 
 // ---------- small lookups ----------
-const currentTab = () => findTab(manifest, state.tab);
-const seasonText = () => `${state.season} ${state.type === 'po' ? 'playoffs' : 'regular season'}`;
-const minMpFloor = () => manifest.min_mp[state.type][state.season];   // the source data's own floor for this season
+const typeWord = () => (state.type === 'po' ? 'playoffs' : 'regular season');
+const activeSeasons = () => (state.multi ? state.ticked : [state.season]);
+const seasonText = () => (state.multi ? `the selected seasons (${typeWord()})` : `${state.season} ${typeWord()}`);
+// The source data's own minutes floor: the lowest of the active seasons' floors (a player shown in Multi has at least that many minutes in total).
+const minMpFloor = () => Math.min(...activeSeasons().map((label) => manifest.min_mp[state.type][label]));
+
+// The tab as the visitor sees it: in Multi, columns that cannot be averaged are left out (manifest `multi` rule "hidden").
+function currentTab() {
+  const tab = findTab(manifest, state.tab);
+  if (!state.multi) return tab;
+  return { ...tab, columns: tab.columns.filter(({ key }) => columnsByKey.get(key).multi !== 'hidden') };
+}
+
+// Team, Pos, Age, GP and MP; in Multi the Seasons column takes Team's place and the hidden ones (Team, Age) go.
+function currentInfoColumns() {
+  if (!state.multi) return singleInfoColumns;
+  return [SEASONS_COLUMN, ...singleInfoColumns.filter((column) => column.multi !== 'hidden')];
+}
 
 // The visitor's last choice, kept like the theme. Storage can be blocked, then the default (rank) applies.
 function savedRankMode() {
@@ -84,12 +106,13 @@ function rememberRankMode(mode) {
 }
 
 function picksOf(tab) {
-  if (!state.picks.has(tab.name)) state.picks.set(tab.name, defaultPicks(tab));
+  if (!state.picks.has(tab.name)) state.picks.set(tab.name, defaultPicks(findTab(manifest, tab.name)));   // the full tab, so Multi's hidden columns keep their default for single mode
   return state.picks.get(tab.name);
 }
 
+// Includes Seasons even in single mode, so a tab opened there still shows Seasons by default once Multi is switched on.
 function allInfoPicks() {
-  return new Set(infoColumns.map((column) => column.key));
+  return new Set([...singleInfoColumns.map((column) => column.key), SEASONS_KEY]);
 }
 
 function infoPicksOf(tab) {
@@ -97,18 +120,29 @@ function infoPicksOf(tab) {
   return state.infoPicks.get(tab.name);
 }
 
-// ---------- loading a season ----------
-async function showSeason(type, seasonLabel) {
+// ---------- loading the season(s) ----------
+// Single mode: the season file itself. Multi: the ticked files, combined into one table (multi.js).
+async function loadSelection() {
+  if (!state.multi) return loadSeason(state.type, state.season);
+  const labels = state.ticked;
+  const files = await loadSeasons(state.type, labels);
+  return aggregateSeasons(manifest, state.type, labels.map((label, index) => ({ label, file: files[index] })));
+}
+
+// Shows whatever `state` now asks for. A single season replaces the table with a loading skeleton; Multi keeps the old
+// table, dimmed, so the page does not jump while up to 27 files arrive.
+async function showSelection() {
   const request = ++latestRequest;
-  state.type = type;
-  state.season = seasonLabel;
+  const keepOldTable = state.multi && view !== null;
   season = null;
-  retryRequest = { type, seasonLabel };
   syncSeasonControls();
 
-  const loadingTimer = setTimeout(() => { status = 'loading'; showPanel(loadingHtml()); }, LOADING_DELAY_MS);
+  const loadingTimer = setTimeout(() => {
+    status = 'loading';
+    if (keepOldTable) showBusy(busyHtml(state.ticked.length), false); else showPanel(loadingHtml());
+  }, LOADING_DELAY_MS);
   try {
-    const loaded = await loadSeason(type, seasonLabel);
+    const loaded = await loadSelection();
     if (request !== latestRequest) return;
     season = loaded;
     status = 'ready';
@@ -116,15 +150,16 @@ async function showSeason(type, seasonLabel) {
   } catch (error) {
     if (request !== latestRequest) return;
     status = 'error';
-    showPanel(errorHtml(`${type}/${seasonLabel}.json`));
+    if (keepOldTable) showBusy(busyErrorHtml(), true); else showPanel(errorHtml(state.multi ? 'the selected seasons' : `${state.type}/${state.season}.json`));
   } finally {
     clearTimeout(loadingTimer);
   }
 }
 
-// Everything that depends on which season file is on screen.
+// Everything that depends on which season data is on screen.
 function applySeason() {
-  emptyKeys = emptyColumnKeys(manifest, state.type, state.season);
+  hideBusy();
+  emptyKeys = emptyColumnKeys(manifest, state.type, activeSeasons());
   fillFilterOptions();
   dropFiltersThatNoLongerApply();
   resetTableScroll();
@@ -140,10 +175,13 @@ function fillFilterOptions() {
     const rankB = POSITION_ORDER.indexOf(b) < 0 ? POSITION_ORDER.length : POSITION_ORDER.indexOf(b);
     return rankA - rankB || a.localeCompare(b);
   });
-  const teams = [...new Set(season.cols.Team)].sort();
   $('f-pos').innerHTML = `<option value="">All</option>${positions.map(option).join('')}`;
-  $('f-team').innerHTML = `<option value="">All</option>${teams.map(option).join('')}`;
-  $('mp-hint').textContent = `(from ${minMpFloor()})`;
+  if (state.multi) {
+    $('f-min-seasons').innerHTML = state.ticked.map((unused, index) => `<option value="${index + 1}">${index + 1}+</option>`).join('');
+  } else {
+    const teams = [...new Set(season.cols.Team)].sort();
+    $('f-team').innerHTML = `<option value="">All</option>${teams.map(option).join('')}`;
+  }
   $('f-mp').min = minMpFloor();
 }
 
@@ -154,6 +192,7 @@ function dropFiltersThatNoLongerApply() {
   if (filters.team && !season.cols.Team.includes(filters.team)) filters.team = '';
   if (filters.pos && !season.cols.Pos.includes(filters.pos)) filters.pos = '';
   if (filters.minMp !== null && filters.minMp <= minMpFloor()) filters.minMp = null;
+  if (state.multi) filters.minSeasons = Math.min(filters.minSeasons, state.ticked.length);   // the dropdown only goes up to the number of ticked seasons
 }
 
 function resetTableScroll() {
@@ -185,11 +224,27 @@ function rankPool() {
   return state.compare || state.filters.search.trim() ? filterRows(season, emptyFilters()) : shownRows;
 }
 
+// The controls that follow the mode and the season choice: type buttons, Multi switch, season select or checklist button,
+// the filters that exist in one mode only, and the Multi note line.
 function syncSeasonControls() {
+  const available = manifest.seasons[state.type];
   $('type-rs').setAttribute('aria-pressed', String(state.type === 'rs'));
   $('type-po').setAttribute('aria-pressed', String(state.type === 'po'));
-  $('season').innerHTML = manifest.seasons[state.type].map((label) => `<option>${escapeHtml(label)}</option>`).join('');
+  $('multi-switch').setAttribute('aria-checked', String(state.multi));
+  $('season').innerHTML = available.map((label) => `<option>${escapeHtml(label)}</option>`).join('');
   $('season').value = state.season;
+  $('season').hidden = state.multi;
+  $('season-multi').hidden = !state.multi;
+  if (state.multi) {
+    $('season-btn').textContent = seasonButtonLabel(available, state.ticked);
+    const listTip = seasonButtonTip(available, state.ticked);
+    if (listTip) $('season-btn').dataset.tip = listTip; else delete $('season-btn').dataset.tip;
+  }
+  for (const field of document.querySelectorAll('[data-single-only]')) field.hidden = state.multi;
+  for (const field of document.querySelectorAll('[data-multi-only]')) field.hidden = !state.multi;
+  $('mp-label').textContent = state.multi ? 'Min MP (total)' : 'Min MP';
+  $('multi-note').innerHTML = MULTI_NOTE_HTML;
+  $('multi-note').hidden = !state.multi;
 }
 
 // Input values are only rewritten when `force` is set or the input is not being typed in.
@@ -203,6 +258,7 @@ function syncFilterInputs(force) {
   setInputValue('f-q', filters.search, force);
   setInputValue('f-pos', filters.pos, force);
   setInputValue('f-team', filters.team, force);
+  setInputValue('f-min-seasons', filters.minSeasons, force);
   setInputValue('f-mp', filters.minMp ?? minMpFloor(), force);
   setInputValue('f-gp', filters.minGp ?? '', force);
   setInputValue('f-age-min', filters.ageMin ?? '', force);
@@ -227,7 +283,8 @@ function renderFilterState() {
   const active = [];
   if (state.compare) active.push('compare view');
   if (names.length) active.push(`${names.length} filter${names.length > 1 ? 's' : ''} active`);
-  $('count').innerHTML = `<b>${shownRows.length}</b> of ${season.n} players` +
+  const multiText = state.multi ? ` &middot; ${state.ticked.length} season${state.ticked.length > 1 ? 's' : ''} (Multi)` : '';
+  $('count').innerHTML = `<b>${shownRows.length}</b> of ${season.n} players${multiText}` +
     (active.length ? ` &middot; ${active.join(' &middot; ')} <button type="button" class="link" data-reset>Reset</button>` : '');
 }
 
@@ -254,13 +311,15 @@ function renderSelectionNote(hiddenByFilters) {
 
 // The legend names the five color steps for the current mode and says which players the numbers are over (see rankPool).
 function renderLegend() {
-  const scope = state.compare ? 'all players this season (compare view)'
-    : state.filters.search.trim() ? 'all players this season (name search)' : 'rows shown';
+  const everyone = state.multi ? 'all players in the selected seasons' : 'all players this season';
+  const scope = state.compare ? `${everyone} (compare view)`
+    : state.filters.search.trim() ? `${everyone} (name search)` : 'rows shown';
   const percentile = state.rankMode === 'percentile';
   const labels = percentile ? ['90\u2013100', '70\u201389', '30\u201369', '10\u201329', '0\u20139'] : ['top', 'upper', 'middle', 'lower', 'bottom'];
   $('legend').innerHTML = `<span>${percentile ? 'Percentile' : 'Rank'} among ${scope}:</span>` +
     labels.map((label, index) => `<span class="rank r${index + 1}">${label}</span>`).join('') +
-    '<span class="muted">&nbsp;&middot; no color = not ranked</span>';
+    '<span class="muted">&nbsp;&middot; no color = not ranked</span>' +
+    (state.multi ? '<span class="fewer-key">italic = fewer seasons</span>' : '');
 }
 
 // Names the columns of this tab that have no data for the season and are therefore left out (partly empty tabs only;
@@ -276,19 +335,46 @@ function renderNotice() {
 }
 
 function showPanel(html) {
+  hideBusy();
   view = null;
   $('table-wrap').hidden = true;
   $('state-panel').innerHTML = html;
   $('state-panel').hidden = false;
 }
 
+// Multi loading or load error: the table on screen is dimmed and a message sits on top of it.
+function showBusy(html, isError) {
+  $('panel').classList.add('is-busy');
+  $('table-wrap').classList.add('is-dim');
+  $('loading-bar').hidden = isError;
+  $('overlay').classList.toggle('is-error', isError);
+  $('overlay').innerHTML = html;
+  $('overlay').hidden = false;
+}
+
+function hideBusy() {
+  $('panel').classList.remove('is-busy');
+  $('table-wrap').classList.remove('is-dim');
+  $('loading-bar').hidden = true;
+  $('overlay').hidden = true;
+}
+
+// A search that finds nobody because of Min seasons gets its own message and a one-click fix.
+function nothingToShowHtml() {
+  const withoutMinSeasons = { ...state.filters, minSeasons: 1 };
+  const blamesMinSeasons = state.filters.minSeasons > 1 && filterRows(season, withoutMinSeasons).length > 0;
+  return blamesMinSeasons ? noMinSeasonsHtml(state.filters.minSeasons, state.ticked.length) : noResultsHtml();
+}
+
 function renderMain() {
   const tab = currentTab();
   tooltip.hide();
+  hint.hide();
   if (tabIsEmpty(tab, emptyKeys)) {
-    showPanel(emptyTabHtml(tab.name, seasonText(), newestSeasonWithData(manifest, tab, state.type, state.season)));
+    const otherSeason = state.multi ? undefined : newestSeasonWithData(manifest, tab, state.type, state.season);
+    showPanel(emptyTabHtml(tab.name, seasonText(), otherSeason));
   } else if (shownRows.length === 0) {
-    showPanel(noResultsHtml());
+    showPanel(nothingToShowHtml());
   } else {
     renderTable(tab);
   }
@@ -296,7 +382,7 @@ function renderMain() {
 
 function renderTable(tab) {
   const { shownKeys } = splitPickedColumns(tab, picksOf(tab), emptyKeys);
-  const shownInfoKeys = infoColumns.map((column) => column.key).filter((key) => infoPicksOf(tab).has(key));
+  const shownInfoKeys = currentInfoColumns().map((column) => column.key).filter((key) => infoPicksOf(tab).has(key));
   const columns = [PLAYER_KEY, ...shownInfoKeys, ...shownKeys].map((key) => columnsByKey.get(key));
   ensureSortColumn(columns, shownKeys);
 
@@ -340,7 +426,8 @@ function renderCredits() {
 
 function renderPicker() {
   const tab = currentTab();
-  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), infoColumns, infoPicksOf(tab), emptyKeys, columnsByKey, bannerTitles);
+  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), currentInfoColumns(), infoPicksOf(tab), emptyKeys, columnsByKey, bannerTitles) +
+    (state.multi ? '<p class="pk-note">Columns that cannot be averaged are not listed in Multi.</p>' : '');
   updatePickerLabel();
 }
 
@@ -355,9 +442,97 @@ function closePicker() {
 }
 
 // ---------- actions ----------
+function setSeason(label) {
+  state.season = label;
+  return showSelection();
+}
+
+// Regular season <-> playoffs. Single mode falls back to the newest season if this one has no file; Multi keeps the ticked
+// seasons that exist and says so when it drops one (2026-27 has no playoffs yet).
 function setType(type) {
-  const seasons = manifest.seasons[type];
-  return showSeason(type, seasons.includes(state.season) ? state.season : seasons[0]);   // newest season if this one has no file
+  const available = manifest.seasons[type];
+  hideFlash();
+  state.type = type;
+  if (!state.multi) {
+    if (!available.includes(state.season)) state.season = available[0];
+    return showSelection();
+  }
+  const dropped = state.ticked.filter((label) => !available.includes(label));
+  state.ticked = state.ticked.filter((label) => available.includes(label));
+  if (state.ticked.length === 0) state.ticked = [available[0]];
+  if (dropped.length) showFlash(`${dropped.join(', ')} ${dropped.length > 1 ? 'have' : 'has'} no ${typeWord()}, dropped.`);
+  return showSelection();
+}
+
+// The Multi switch. Turning it on starts from the season the visitor was viewing; turning it off returns to the newest
+// ticked season. Team and Age filters have no meaning across seasons, so entering Multi clears them.
+// Leaving Multi resets Min MP to the season's floor and clears Min GP: in Multi they are totals, which mean something else for one season.
+function setMulti(on) {
+  if (on === state.multi) return;
+  hideFlash();
+  closeSeasonList(false);
+  const filters = state.filters;
+  if (on) {
+    const hadTeamOrAge = filters.team !== '' || filters.ageMin !== null || filters.ageMax !== null;
+    state.multi = true;
+    state.ticked = [state.season];
+    filters.team = '';
+    filters.ageMin = null;
+    filters.ageMax = null;
+    if (hadTeamOrAge) showFlash('Team and Age filters were cleared for Multi.');
+  } else {
+    state.multi = false;
+    state.season = state.ticked[0];
+    filters.minSeasons = 1;
+    filters.minMp = null;   // Min MP and Min GP meant totals across seasons; as per-season limits they would hide almost everyone
+    filters.minGp = null;
+    if (state.ticked.length > 1) showFlash(`Back to a single season: ${state.season}, the newest of your ticked seasons.`);
+  }
+  return showSelection();
+}
+
+// ---------- the season checklist (Multi) ----------
+// The master list of seasons is the regular-season one; playoffs have the same seasons minus those not played yet.
+function renderSeasonList() {
+  $('sp-list').innerHTML = checklistHtml(manifest.seasons.rs, manifest.seasons[state.type], seasonDraft);
+  $('sp-count').textContent = `${seasonDraft.size} selected`;
+}
+
+function openSeasonList() {
+  seasonDraft = new Set(state.ticked);
+  renderSeasonList();
+  $('season-pop').hidden = false;
+  $('season-btn').setAttribute('aria-expanded', 'true');
+  $('backdrop').hidden = !phone.matches;
+  $('sp-list').querySelector('input:not(:disabled)')?.focus();
+}
+
+function closeSeasonList(returnFocus) {
+  $('season-pop').hidden = true;
+  $('backdrop').hidden = true;
+  $('season-btn').setAttribute('aria-expanded', 'false');
+  if (returnFocus) $('season-btn').focus();
+}
+
+function applySeasonList() {
+  const picked = manifest.seasons.rs.filter((label) => seasonDraft.has(label));   // newest first
+  closeSeasonList(true);
+  if (picked.join() === state.ticked.join()) return;
+  setTicked(picked);
+}
+
+function setTicked(labels) {
+  state.ticked = labels;
+  return showSelection();
+}
+
+function showFlash(text) {
+  $('flash').innerHTML = `<span>${escapeHtml(text)}</span><button type="button" data-dismiss-flash aria-label="Dismiss">&times;</button>`;
+  $('flash').hidden = false;
+}
+
+function hideFlash() {
+  $('flash').hidden = true;
 }
 
 function setTab(name) {
@@ -381,6 +556,8 @@ function setFilter(name, raw) {
   const filters = state.filters;
   if (name === 'pos' || name === 'team' || name === 'search') {
     filters[name] = raw ?? '';
+  } else if (name === 'minSeasons') {
+    filters.minSeasons = Number(raw);
   } else {
     let number = numberOrNull(raw);
     // The minutes filter cannot go below the data's own floor; "no minimum" is the same as the floor.
@@ -445,6 +622,7 @@ function toggleSelected(entityId, name, on) {
 }
 
 function sortBy(key, direction) {
+  if (!season) return;   // the table on screen is dimmed while Multi loads
   const column = columnsByKey.get(key);
   const sameColumn = state.sort && state.sort.key === key;
   const flipped = state.sort && state.sort.direction === 'asc' ? 'desc' : 'asc';
@@ -470,7 +648,7 @@ function syncRankModeControls() {
 }
 
 function pickColumns(action) {
-  const tab = currentTab();
+  const tab = findTab(manifest, state.tab);   // the full tab: a Default or All pick also covers columns Multi hides
   const wanted = (column) => action === 'all' || (action === 'default' && column.default_visible);
   state.picks.set(tab.name, new Set(tab.columns.filter(wanted).map((column) => column.key)));
   // None hides the player-info columns too (only Player stays); Default and All bring them back.
@@ -511,7 +689,8 @@ function wireToolbar() {
   for (const button of document.querySelectorAll('[data-rank-mode]')) {
     button.addEventListener('click', () => { if (button.dataset.rankMode !== state.rankMode) setRankMode(button.dataset.rankMode); });
   }
-  $('season').addEventListener('change', (event) => showSeason(state.type, event.target.value));
+  $('season').addEventListener('change', (event) => setSeason(event.target.value));
+  $('multi-switch').addEventListener('click', () => setMulti(!state.multi));
   $('filters-btn').addEventListener('click', () => setFiltersOpen(!state.filtersOpen));
   $('compare-btn').addEventListener('click', () => { if (state.compare) showAll(); else setCompare(true); });
 
@@ -535,6 +714,36 @@ function wireToolbar() {
   });
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-reset]')) resetFilters();
+  });
+  $('flash').addEventListener('click', (event) => {
+    if (event.target.closest('[data-dismiss-flash]')) hideFlash();
+  });
+}
+
+function wireSeasonList() {
+  $('season-btn').addEventListener('click', () => { if ($('season-pop').hidden) openSeasonList(); else closeSeasonList(false); });
+  $('season-apply').addEventListener('click', applySeasonList);
+  $('season-cancel').addEventListener('click', () => closeSeasonList(true));
+  $('backdrop').addEventListener('click', () => closeSeasonList(true));
+  phone.addEventListener('change', () => closeSeasonList(false));   // the popover and the sheet are different layouts
+
+  $('sp-list').addEventListener('change', (event) => {
+    const label = event.target.dataset.season;
+    if (event.target.checked) seasonDraft.add(label); else seasonDraft.delete(label);
+    renderSeasonList();   // redraws the rows, so the one remaining ticked box can be disabled
+    $('sp-list').querySelector(`input[data-season="${label}"]:not(:disabled)`)?.focus();
+  });
+  $('sp-list').addEventListener('keydown', (event) => {   // arrow keys move between the boxes
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const boxes = [...$('sp-list').querySelectorAll('input:not(:disabled)')];
+    const next = boxes[boxes.indexOf(event.target) + (event.key === 'ArrowDown' ? 1 : -1)];
+    if (next) { event.preventDefault(); next.focus(); }
+  });
+  document.addEventListener('click', (event) => {   // a click elsewhere closes the list without applying
+    if (!$('season-pop').hidden && !event.target.closest('#season-multi')) closeSeasonList(false);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('season-pop').hidden) closeSeasonList(true);
   });
 }
 
@@ -577,10 +786,11 @@ function wireTable() {
     const header = event.target.closest('[data-sort]');
     if (header) sortBy(header.dataset.sort);
   });
-  $('state-panel').addEventListener('click', (event) => {
+  $('panel').addEventListener('click', (event) => {   // the message panels and the Multi loading overlay
     const jump = event.target.closest('[data-switch-season]');
-    if (jump) showSeason(state.type, jump.dataset.switchSeason);
-    if (event.target.closest('[data-retry]')) showSeason(retryRequest.type, retryRequest.seasonLabel);
+    if (jump) setSeason(jump.dataset.switchSeason);
+    if (event.target.closest('[data-retry]')) showSelection();
+    if (event.target.closest('[data-fix-min-seasons]')) setFilter('minSeasons', 1);   // Min seasons was the only reason nobody matched
   });
   $('table-wrap').addEventListener('scroll', () => tooltip.hide());
 
@@ -610,8 +820,11 @@ function installTestHook() {
     setFilter: (name, value) => { setFilter(name, value); syncFilterInputs(true); },
     resetFilters,
     sortBy,
-    setSeason: (seasonLabel) => showSeason(state.type, seasonLabel),
+    setSeason,
     setType,
+    setMulti,
+    setTicked: (labels) => setTicked(manifest.seasons.rs.filter((label) => labels.includes(label))),   // any order; stored newest first
+    openSeasonList,
     setTheme: (theme) => { if (document.documentElement.dataset.theme !== theme) $('theme').click(); },
     setFiltersOpen,
     pickColumns,
@@ -621,10 +834,11 @@ function installTestHook() {
     select: (entityId, on = true) => toggleSelected(entityId, season.cols.Player[season.id.indexOf(entityId)], on),   // a player of the season on screen
     setCompare,
     showAll,
+    data: () => (season ? { id: season.id, cols: season.cols, contributed: season.contributed ? Object.fromEntries([...season.contributed].map(([key, counts]) => [key, Array.from(counts)])) : null } : null),   // every cell of the data on screen (all columns, all players)
     rankOf: (entityId, key) => numberOver(entityId, key, lookupRank),
     percentileOf: (entityId, key) => numberOver(entityId, key, lookupPercentile),
     state: () => ({
-      type: state.type, season: state.season, tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen, rankMode: state.rankMode, compare: state.compare, selected: [...state.selected.keys()], compareEnabled: !$('compare-btn').disabled,
+      type: state.type, season: state.season, multi: state.multi, ticked: [...state.ticked], tab: state.tab, status, sort: state.sort, filtersOpen: state.filtersOpen, rankMode: state.rankMode, compare: state.compare, selected: [...state.selected.keys()], compareEnabled: !$('compare-btn').disabled,
       filters: { ...state.filters }, shown: shownRows.length, total: season ? season.n : 0,
     }),
   };
@@ -640,8 +854,12 @@ async function start() {
     return;
   }
   columnsByKey = indexColumnsByKey(manifest);
-  infoColumns = manifest.base_columns.filter((key) => key !== PLAYER_KEY).map((key) => columnsByKey.get(key));
+  singleInfoColumns = manifest.base_columns.filter((key) => key !== PLAYER_KEY).map((key) => columnsByKey.get(key));
   bannerTitles = indexBannerTitles(glossary);
+  // The Seasons column exists only in Multi, so neither data file lists it. Registering it here lets the table, the
+  // column fitter and the header tooltip treat it like any other column.
+  columnsByKey.set(SEASONS_KEY, SEASONS_COLUMN);
+  glossary.entries[SEASONS_KEY] = SEASONS_ENTRY;
 
   const requestedTab = new URLSearchParams(location.search).get('tab');   // the glossary links back with ?tab=
   state.tab = findTab(manifest, requestedTab) ? requestedTab : manifest.tabs[0].name;
@@ -651,16 +869,20 @@ async function start() {
   tooltip = setUpTooltip($('tip'), $('grid'), (key) => ({
     column: columnsByKey.get(key),
     tooltip: glossary.entries[key].tooltip,
+    link: glossary.entries[key].link,
   }));
   wireTabs();
+  hint = setUpHint($('hint'));
   wireToolbar();
+  wireSeasonList();
   wirePicker();
   wireTable();
   installTestHook();
   setFiltersOpen(false);
   syncRankModeControls();
 
-  await showSeason('rs', manifest.seasons.rs[0]);
+  state.season = manifest.seasons.rs[0];
+  await showSelection();
   document.body.dataset.ready = 'true';
 }
 

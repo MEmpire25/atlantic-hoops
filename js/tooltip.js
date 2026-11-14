@@ -1,11 +1,11 @@
 // Header tooltip. Opens on hover or keyboard focus of a header; the small "i" button (click or Enter) pins it and moves
 // focus to its glossary link. Esc closes it and returns focus to the button.
-import { escapeHtml, glossaryLink } from './text.js?v=eeb1ada6db';
+import { escapeHtml, glossaryLink } from './text.js?v=5f3ae5be70';
 
 const HIDE_DELAY_MS = 180;   // lets the pointer travel from the header to the tooltip without it closing
 
-// `describeColumn(key)` returns { column, tooltip } for the column; the caller knows the manifest and the glossary,
-// this module only handles showing and hiding.
+// `describeColumn(key)` returns { column, tooltip, link } for the column (`link` only when the glossary entry is not the
+// column's own anchor); the caller knows the manifest and the glossary, this module only handles showing and hiding.
 export function setUpTooltip(tipElement, grid, describeColumn) {
   let pinnedKey = null;
   let shownKey = null;
@@ -13,10 +13,10 @@ export function setUpTooltip(tipElement, grid, describeColumn) {
   let ignoreFocus = false;
 
   function contentHtml(key) {
-    const { column, tooltip } = describeColumn(key);
+    const { column, tooltip, link } = describeColumn(key);
     return `<div class="tip-title">${escapeHtml(column.name)}</div><p>${escapeHtml(tooltip)}</p>` +
       (column.source ? `<p>Source: ${escapeHtml(column.source)}</p>` : '') +
-      `<a class="tip-link" href="${glossaryLink(key)}">Glossary &rarr;</a>`;
+      `<a class="tip-link" href="${link ?? glossaryLink(key)}">Glossary &rarr;</a>`;
   }
 
   function markPinnedButton() {
