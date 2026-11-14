@@ -1,22 +1,22 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason } from './data.js?v=0bb59059d4';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=0bb59059d4';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=0bb59059d4';
-import { naturalSortDirection, sortRows } from './sorting.js?v=0bb59059d4';
+import { loadManifest, loadGlossary, loadSeason } from './data.js?v=eeb1ada6db';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=eeb1ada6db';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=eeb1ada6db';
+import { naturalSortDirection, sortRows } from './sorting.js?v=eeb1ada6db';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=0bb59059d4';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=0bb59059d4';
-import { tableHtml } from './table.js?v=0bb59059d4';
-import { fitColumns } from './measure.js?v=0bb59059d4';
-import { buildTabs, updateTabs } from './tabs.js?v=0bb59059d4';
-import { pickerHtml, pickerLabel } from './picker.js?v=0bb59059d4';
-import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=0bb59059d4';
-import { setUpTooltip } from './tooltip.js?v=0bb59059d4';
-import { escapeHtml } from './text.js?v=0bb59059d4';
+} from './columns.js?v=eeb1ada6db';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=eeb1ada6db';
+import { tableHtml } from './table.js?v=eeb1ada6db';
+import { fitColumns } from './measure.js?v=eeb1ada6db';
+import { buildTabs, updateTabs } from './tabs.js?v=eeb1ada6db';
+import { pickerHtml, pickerLabel } from './picker.js?v=eeb1ada6db';
+import { loadingHtml, errorHtml, noResultsHtml, emptyTabHtml } from './panels.js?v=eeb1ada6db';
+import { setUpTooltip } from './tooltip.js?v=eeb1ada6db';
+import { escapeHtml } from './text.js?v=eeb1ada6db';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
@@ -43,7 +43,7 @@ const state = {
   filters: emptyFilters(),
   sort: null,              // { key, direction }
   picks: new Map(),        // tab name -> Set of picked column keys (created from the manifest defaults on first use)
-  infoPicks: new Set(),    // Team, Pos, Age, GP, MP keys that are shown; one choice for all tabs (filled in start)
+  infoPicks: new Map(),    // tab name -> Set of shown Team, Pos, Age, GP, MP keys (all on at first use, like picks)
   filtersOpen: false,      // phone only
   rankMode: savedRankMode(),   // 'rank' | 'percentile': which number sits beside each value
   selected: new Map(),     // players ticked for compare: EntityId -> name; kept across tabs, seasons and RS/PO
@@ -86,6 +86,15 @@ function rememberRankMode(mode) {
 function picksOf(tab) {
   if (!state.picks.has(tab.name)) state.picks.set(tab.name, defaultPicks(tab));
   return state.picks.get(tab.name);
+}
+
+function allInfoPicks() {
+  return new Set(infoColumns.map((column) => column.key));
+}
+
+function infoPicksOf(tab) {
+  if (!state.infoPicks.has(tab.name)) state.infoPicks.set(tab.name, allInfoPicks());
+  return state.infoPicks.get(tab.name);
 }
 
 // ---------- loading a season ----------
@@ -287,7 +296,7 @@ function renderMain() {
 
 function renderTable(tab) {
   const { shownKeys } = splitPickedColumns(tab, picksOf(tab), emptyKeys);
-  const shownInfoKeys = infoColumns.map((column) => column.key).filter((key) => state.infoPicks.has(key));
+  const shownInfoKeys = infoColumns.map((column) => column.key).filter((key) => infoPicksOf(tab).has(key));
   const columns = [PLAYER_KEY, ...shownInfoKeys, ...shownKeys].map((key) => columnsByKey.get(key));
   ensureSortColumn(columns, shownKeys);
 
@@ -331,7 +340,7 @@ function renderCredits() {
 
 function renderPicker() {
   const tab = currentTab();
-  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), infoColumns, state.infoPicks, emptyKeys, columnsByKey, bannerTitles);
+  $('picker-body').innerHTML = pickerHtml(tab, picksOf(tab), infoColumns, infoPicksOf(tab), emptyKeys, columnsByKey, bannerTitles);
   updatePickerLabel();
 }
 
@@ -464,7 +473,8 @@ function pickColumns(action) {
   const tab = currentTab();
   const wanted = (column) => action === 'all' || (action === 'default' && column.default_visible);
   state.picks.set(tab.name, new Set(tab.columns.filter(wanted).map((column) => column.key)));
-  if (action !== 'none') state.infoPicks = new Set(infoColumns.map((column) => column.key));   // Default and All bring back the player-info columns too
+  // None hides the player-info columns too (only Player stays); Default and All bring them back.
+  state.infoPicks.set(tab.name, action === 'none' ? new Set() : allInfoPicks());
   renderPicker();
   renderResults();
 }
@@ -541,7 +551,7 @@ function wirePicker() {
   $('picker').addEventListener('change', (event) => {
     const infoKey = event.target.dataset.infoPick;
     const key = infoKey ?? event.target.dataset.pick;
-    const picks = infoKey ? state.infoPicks : picksOf(currentTab());
+    const picks = infoKey ? infoPicksOf(currentTab()) : picksOf(currentTab());
     if (event.target.checked) picks.add(key); else picks.delete(key);
     updatePickerLabel();
     renderResults();
@@ -631,7 +641,6 @@ async function start() {
   }
   columnsByKey = indexColumnsByKey(manifest);
   infoColumns = manifest.base_columns.filter((key) => key !== PLAYER_KEY).map((key) => columnsByKey.get(key));
-  state.infoPicks = new Set(infoColumns.map((column) => column.key));
   bannerTitles = indexBannerTitles(glossary);
 
   const requestedTab = new URLSearchParams(location.search).get('tab');   // the glossary links back with ?tab=
