@@ -6,8 +6,8 @@
 // table work on it unchanged. Extra fields: `contributed` and `seasonLists` (for the cell tooltips) and `tickedCount`.
 // How each column is combined comes from the manifest's per-column `multi` rule (approved by the owner):
 //   sum = total over the seasons; w_total / w_off / w_def = average weighted by TotalPoss / OffPoss / DefPoss.
-import { normalizeForSearch } from './text.js?v=a477339ca2';
-import { SEASONS_KEY } from './multi-copy.js?v=a477339ca2';
+import { normalizeForSearch } from './text.js?v=80bd9a41d5';
+import { SEASONS_KEY } from './multi-copy.js?v=80bd9a41d5';
 
 const POSSESSION_COLUMN = { w_total: 'TotalPoss', w_off: 'OffPoss', w_def: 'DefPoss' };
 const DECIMALS = { int: 0, '1dp': 1, pct1: 1, '2dp': 2 };   // display decimals of each column format (see format.js)

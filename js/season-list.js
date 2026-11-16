@@ -1,6 +1,6 @@
 // The season checklist of Multi mode (a popover on desktop, a bottom sheet on phones): its rows and the label of the button
 // that opens it. Pure text-building; main.js keeps the state and wires the clicks.
-import { escapeHtml } from './text.js?v=a477339ca2';
+import { escapeHtml } from './text.js?v=80bd9a41d5';
 
 // `allLabels`: every season of the site, newest first. `available`: the ones that exist for the chosen season type
 // (playoffs have no 2026-27 yet). `draft`: the Set of labels currently ticked in the list, not yet applied.
