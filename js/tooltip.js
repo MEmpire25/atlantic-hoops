@@ -1,6 +1,6 @@
 // Header tooltip. Opens on hover or keyboard focus of a header; the small "i" button (click or Enter) pins it and moves
 // focus to its glossary link. Esc closes it and returns focus to the button.
-import { escapeHtml, glossaryLink } from './text.js?v=5f3ae5be70';
+import { escapeHtml, glossaryLink } from './text.js?v=a477339ca2';
 
 const HIDE_DELAY_MS = 180;   // lets the pointer travel from the header to the tooltip without it closing
 
@@ -32,12 +32,18 @@ export function setUpTooltip(tipElement, grid, describeColumn) {
     tipElement.innerHTML = contentHtml(key);
     tipElement.hidden = false;
 
+    // Measure at the left edge first: a tooltip last shown near the right edge would otherwise wrap narrower.
+    tipElement.style.left = '0px';
     const anchor = headerCell.getBoundingClientRect();
+    const infoLeft = headerCell.querySelector('.info').getBoundingClientRect().left;
     const width = tipElement.offsetWidth;
     const height = tipElement.offsetHeight;
     const below = anchor.bottom + 6;
     const top = below + height > window.innerHeight - 8 ? Math.max(8, anchor.top - height - 6) : below;
-    tipElement.style.left = `${Math.max(8, Math.min(anchor.left, window.innerWidth - width - 8))}px`;
+    // Start at the (i), not the cell: on a wide cell the name and (i) sit far from the cell's left edge.
+    // clientWidth excludes the scrollbar, so the tooltip never slides under it.
+    const visibleWidth = document.documentElement.clientWidth;
+    tipElement.style.left = `${Math.max(8, Math.min(infoLeft, visibleWidth - width - 8))}px`;
     tipElement.style.top = `${top}px`;
     markPinnedButton();
   }

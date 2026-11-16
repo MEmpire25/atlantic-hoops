@@ -10,7 +10,11 @@
   function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
     var button = document.getElementById('theme');
-    if (button) button.textContent = theme === 'dark' ? 'Light theme' : 'Dark theme';
+    if (!button) return;
+    // The icon (chosen by CSS) and this name both describe the theme a click switches to.
+    var action = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+    button.setAttribute('aria-label', action);
+    button.title = action;
   }
 
   function rememberTheme(theme) {
@@ -21,7 +25,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     var button = document.getElementById('theme');
-    applyTheme(document.documentElement.dataset.theme);   // now the button exists, set its label
+    applyTheme(document.documentElement.dataset.theme);   // now the button exists, set its name
     button.addEventListener('click', function () {
       var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
       applyTheme(next);

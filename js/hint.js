@@ -1,7 +1,7 @@
 // Small tooltip for anything with a data-tip attribute: the Multi switch, the season button and the Multi cells of the
 // table (header tooltips are tooltip.js). Hover or keyboard focus on a computer, a tap on a touch screen.
 // An element may carry data-tip-href: the tooltip then ends with a "Glossary" link to it.
-import { escapeHtml } from './text.js?v=5f3ae5be70';
+import { escapeHtml } from './text.js?v=a477339ca2';
 
 const HIDE_DELAY_MS = 180;     // lets the pointer travel from the element to a link in the tooltip
 const TOUCH_SHOW_MS = 3000;    // a touch screen has no pointer leaving, so the tooltip closes by itself

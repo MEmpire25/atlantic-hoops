@@ -81,6 +81,8 @@ html[data-theme="light"] {
   --gutter: 12px;
   --gutter-phone: 6px;
   --control-height: 28px;
+  --theme-btn-size: var(--control-height);   /* the sun/moon button: same height as the old text button, so the header keeps its height */
+  --theme-icon-size: 16px;
   --phone-control-height: 36px;
   --radius: 4px;
   --radius-small: 3px;

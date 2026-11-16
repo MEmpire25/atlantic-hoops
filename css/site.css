@@ -39,6 +39,14 @@ a { color: var(--accent); }
 .btn { flex: none; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); padding: 0 10px; height: var(--control-height); cursor: pointer; color: var(--text); white-space: nowrap; }
 .btn:hover { border-color: var(--text2); }
 .btn:disabled { background: none; border: 1px dashed var(--line); color: var(--text3); cursor: not-allowed; }   /* faded, but the label keeps 4.5:1 */
+/* Theme button: both icons sit in the same grid cell, so the button never changes size; CSS shows the one for the theme you
+   would switch TO (sun while dark, moon while light). Solid rays and an outlined body; accent colour on hover and focus. */
+.theme-btn { flex: none; display: inline-grid; place-items: center; width: var(--theme-btn-size); height: var(--theme-btn-size); padding: 0; cursor: pointer;
+  background: transparent; border: 1px solid var(--ctl); border-radius: var(--radius); color: var(--text2); }
+.theme-btn svg { grid-area: 1 / 1; width: var(--theme-icon-size); height: var(--theme-icon-size); fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+html[data-theme="dark"] .theme-btn .icon-moon, html[data-theme="light"] .theme-btn .icon-sun { display: none; }
+.theme-btn:hover, .theme-btn:focus-visible { color: var(--accent); border-color: var(--accent); background: var(--hover); }
+.theme-btn:hover svg { stroke-width: 1.8; }
 .btn.is-on { border-color: var(--accent); color: var(--accent); }
 .link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; }
 
