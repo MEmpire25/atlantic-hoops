@@ -1,12 +1,26 @@
 // The category tabs: a tab row on desktop and a dropdown on phones (CSS shows one of them). The elements are created
 // once from the manifest; after that only their state is updated, so keyboard focus is never lost.
-import { escapeHtml } from './text.js?v=80bd9a41d5';
-import { tabIsEmpty } from './columns.js?v=80bd9a41d5';
+import { escapeHtml } from './text.js?v=19dd9c9ac6';
+import { tabIsEmpty } from './columns.js?v=19dd9c9ac6';
 
-export function buildTabs(tabsRow, tabSelect, tabs) {
+// `idPrefix` keeps the button ids unique when a second tab row exists (the player tile has its own).
+export function buildTabs(tabsRow, tabSelect, tabs, idPrefix) {
   tabsRow.innerHTML = tabs.map((tab, index) =>
-    `<button type="button" role="tab" id="tab-${index}" class="tab" data-tab="${escapeHtml(tab.name)}"></button>`).join('');
+    `<button type="button" role="tab" id="${idPrefix}-${index}" class="tab" data-tab="${escapeHtml(tab.name)}"></button>`).join('');
   tabSelect.innerHTML = tabs.map((tab) => `<option value="${escapeHtml(tab.name)}"></option>`).join('');
+}
+
+// Arrow keys move between the tabs of a row (only the active tab is in the Tab order).
+export function wireTabKeys(tabsRow, tabs, getActiveName, selectTab) {
+  tabsRow.addEventListener('keydown', (event) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const index = tabs.findIndex((tab) => tab.name === getActiveName());
+    const next = (index + step + tabs.length) % tabs.length;
+    selectTab(tabs[next].name);
+    tabsRow.children[next].focus();
+  });
 }
 
 // Marks the active tab and the tabs with no data in this season ("Explain"): they stay in the bar but are dimmed.

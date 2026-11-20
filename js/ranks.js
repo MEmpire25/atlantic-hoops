@@ -75,6 +75,20 @@ export function widestNumberDigits(rankTable, mode) {
   return String(widest).length;
 }
 
+// The ranking of one cell of a player file (see the data contract: the export precomputes `rank`, `pct` and `of` over the
+// season's default view, the same numbers the stats table shows with no filter set). `block` is the player's regular-season
+// or playoffs block, `index` the season's position in it. Returns the number to show in `mode` and its color step, or null for
+// columns that carry no rank (direction "none", text) and for blank cells.
+export function playerCellRanking(block, key, index, mode) {
+  const rank = block.rank[key]?.[index] ?? null;
+  if (rank === null) return null;
+  const percentile = block.pct[key][index];
+  const total = block.of[key][index];
+  return mode === 'percentile'
+    ? { rank, percentile, total, number: percentile, step: percentileColorStep(percentile) }
+    : { rank, percentile, total, number: rank, step: rankColorStep(rank, total) };
+}
+
 // Rank tables for the given columns. Columns whose direction is "none" (and text columns) get no table, so they show
 // no number at all.
 export function buildRankTables(columns, season, poolRows) {

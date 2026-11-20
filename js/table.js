@@ -12,13 +12,13 @@
 //   bannerTitles: Map key -> banner title (groups of columns, e.g. "1-Year RAPM Measures"),
 //   glossary:     the glossary file (only its tooltips are used here, to decide where the "i" button goes)
 // }
-import { escapeHtml } from './text.js?v=80bd9a41d5';
-import { formatValue } from './format.js?v=80bd9a41d5';
-import { colorStep, shownNumber } from './ranks.js?v=80bd9a41d5';
-import { sourceTag } from './columns.js?v=80bd9a41d5';
-import { multiCellNote } from './multi.js?v=80bd9a41d5';
+import { escapeHtml } from './text.js?v=19dd9c9ac6';
+import { formatValue } from './format.js?v=19dd9c9ac6';
+import { colorStep, shownNumber } from './ranks.js?v=19dd9c9ac6';
+import { sourceTag } from './columns.js?v=19dd9c9ac6';
+import { multiCellNote } from './multi.js?v=19dd9c9ac6';
 
-const BLANK_MARK = '–';
+export const BLANK_MARK = '–';
 
 // Text of one cell, or null for a blank. Text columns are shown as stored.
 export function cellText(season, row, column) {
@@ -34,13 +34,13 @@ export function headerPieces(name) {
   return name.replace(/([a-z]{2})(?=[A-Z])|[/:]|\s/g, (breakPoint) => `${breakPoint}\u0000`).split('\u0000').filter((piece) => piece !== '');
 }
 
-function headerNameHtml(name) {
+export function headerNameHtml(name) {
   return headerPieces(name).map(escapeHtml).join('<wbr>');
 }
 
 // Source tag under a third-party column's header. When any shown column has one, the others get an empty tag line, so
 // all names and tools lines in the row line up.
-function creditTagHtml(column, view) {
+export function creditTagHtml(column, view) {
   if (column.source) {
     return `<span class="credit-tag" title="Source: ${escapeHtml(column.source)}">${escapeHtml(sourceTag(column.source))}</span>`;
   }
@@ -91,10 +91,14 @@ function bannerRowHtml(view) {
   return `<tr>${cells}</tr>`;
 }
 
+// The small colored number beside a value (a boxed chip in percentile mode, see css). `total` is how many players share the ranking.
+export function rankChipHtml(number, step, total, mode) {
+  const title = mode === 'percentile' ? `Percentile ${number} (among ${total})` : `Rank ${number} of ${total}`;
+  return `<span class="rank r${step}" title="${title}">${number}</span>`;
+}
+
 function rankHtml(rankTable, value, mode) {
-  const number = shownNumber(rankTable, value, mode);
-  const title = mode === 'percentile' ? `Percentile ${number} (among ${rankTable.total})` : `Rank ${number} of ${rankTable.total}`;
-  return `<span class="rank r${colorStep(rankTable, value, mode)}" title="${title}">${number}</span>`;
+  return rankChipHtml(shownNumber(rankTable, value, mode), colorStep(rankTable, value, mode), rankTable.total, mode);
 }
 
 // The compare checkbox before a player's name. The label is the visible square and also carries the larger tap area.
@@ -109,7 +113,10 @@ function cellHtml(row, column, view) {
   const sortedClass = view.sort.key === column.key ? ' is-sorted' : '';
 
   if (column.key === 'Player') {
-    return `<th scope="row" class="player" title="${escapeHtml(value)}">${pickBoxHtml(row, value, view)}${escapeHtml(value)}</th>`;
+    // The name is a real link: a plain click opens the player tile (main.js), a middle click or copied link opens the same tile on a fresh page.
+    const entityId = view.season.id[row];
+    return `<th scope="row" class="player" title="${escapeHtml(value)}">${pickBoxHtml(row, value, view)}` +
+      `<a class="player-link" href="?player=${entityId}" data-player="${entityId}">${escapeHtml(value)}</a></th>`;
   }
   if (column.format === 'text') {
     return `<td class="txt${sortedClass}">${value === null ? '' : escapeHtml(value)}</td>`;

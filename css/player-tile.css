@@ -1,0 +1,125 @@
+/* The player tile: a panel over the stats page, and the player names that open it. Colors and sizes come from tokens.css.
+   The tile reuses the stats page's controls, table, rank numbers and picker (site.css); only what is new is here. */
+
+/* ---------- player names in the stats table ---------- */
+.player-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--accent); }
+.player-link:hover { color: var(--accent); }
+
+/* ---------- shell ---------- */
+/* The scrim is a scroll container that never has anything to scroll: it only stops a wheel or swipe from moving the page behind. */
+.tile-scrim { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--tile-margin); background: var(--scrim); overflow: auto; overscroll-behavior: contain; }
+.tile { position: relative; display: flex; flex-direction: column; width: min(var(--tile-width), 100%); height: min(100%, var(--tile-max-height)); min-height: 0; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--tile-radius); box-shadow: var(--shadow); overflow: hidden; }
+.tile:focus { outline: none; }   /* the tile itself takes focus on opening; it is not a control */
+.tile-main { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+#tile-state { margin: var(--tile-pad); }
+
+/* header block */
+.tile-head { display: flex; align-items: flex-start; gap: 12px; padding: 12px var(--tile-pad) 10px; border-bottom: var(--header-rule) solid var(--line);
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--accent) var(--seam-strength), transparent) 0 1px, transparent 1px var(--seam-gap)); }
+.tile-id { flex: 1; min-width: 0; }
+.tile-id h2 { margin: 0; font-size: var(--fs-tile-name); line-height: 1.15; font-weight: var(--wordmark-weight); letter-spacing: .01em; overflow-wrap: anywhere; }
+.tile-facts { display: flex; flex-wrap: wrap; gap: 2px 18px; margin: 6px 0 0; }
+.tile-facts > div { display: flex; gap: 6px; align-items: baseline; }
+.tile-facts dt { font-size: var(--fs-label); color: var(--text3); }
+.tile-facts dd { margin: 0; color: var(--text); }
+.tile-actions { flex: none; display: flex; align-items: center; gap: 8px; }
+.tile-close { display: grid; place-items: center; width: var(--tile-close-size); height: var(--tile-close-size); padding: 0; background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--radius); cursor: pointer; color: var(--text2); }
+.tile-close:hover { color: var(--accent); border-color: var(--accent); }
+.tile-close svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* tabs and switches (the tab buttons and .seg are the stats page's own) */
+.tile-toolbar { border-bottom: 1px solid var(--ctl); }
+.tile-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: thin; padding: 0 var(--gutter); border-bottom: 1px solid var(--line); }
+.tile-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px var(--gutter); }
+.tile-tabsel { display: none; flex: 1 1 100%; }
+.tile-tabsel select { width: 100%; height: var(--phone-control-height); padding: 2px 8px; font-size: var(--fs-phone-control); font-weight: 600; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius); color: var(--text); }
+.tile-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-left: auto; }
+
+/* body: count line, season table, chart */
+.tile-body { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 12px; --table-max-height: var(--tile-table-height); }
+.tile-body.has-chart { --table-max-height: var(--tile-table-height-chart); }
+.tile .table-wrap { min-height: 0; }
+.tile-grid { table-layout: auto; }
+.tile-grid th.season-col .th-in { justify-content: flex-start; }
+.tile-grid th.season-col .sort { text-align: left; }
+/* Season, the frozen first column */
+.season-col { position: sticky; left: 0; z-index: 2; text-align: left; white-space: nowrap; padding-left: var(--player-pad-left); padding-right: var(--player-pad-left); border-right: 1px solid var(--line); font-weight: 600; }
+thead th.season-col { z-index: 5; text-align: left; }
+tbody tr:hover > .season-col { box-shadow: inset var(--hover-edge) 0 0 var(--accent); }
+.live-tag { display: block; font-size: var(--fs-rank); font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+/* The rank number's slot is sized from its digit count (the stats page measures it; here it is estimated from Inter's digit width). */
+.tile-grid { --rank-slot-1: calc(.62em + 1px); --rank-slot-2: calc(1.24em + 1px); --rank-slot-3: calc(1.86em + 1px); --rank-slot-4: calc(2.48em + 1px); }
+body.percentile-mode .tile-grid { --rank-slot-1: calc(.62em + 2px); --rank-slot-2: calc(1.24em + 2px); --rank-slot-3: calc(1.86em + 2px); --rank-slot-4: calc(2.48em + 2px); }
+.tile .notice, .tile .panel-msg { margin-top: 4px; }
+
+/* ---------- chart ---------- */
+.tile-chart { margin: 12px var(--gutter) 0; padding: 10px 10px 10px; background: var(--row); border: 1px solid var(--line); border-radius: var(--table-radius); }
+.c-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 4px; }
+.c-head h3 { margin: 0; font-size: var(--fs-panel-title); }
+.c-sub { color: var(--text2); font-size: var(--fs-note); }
+.c-head .link-btn { margin-left: auto; font-size: var(--fs-note); }
+.c-hint { margin: 4px 0 0; font-size: var(--fs-label); color: var(--text2); }
+.c-key { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 0; padding: 6px 0 0; border-top: 1px solid var(--line); color: var(--text2); font-size: var(--fs-label); }
+.c-key span { display: inline-flex; align-items: center; gap: 5px; }
+.c-key svg { width: 16px; height: 16px; flex: none; }
+.chart text { font-family: var(--font); font-variant-numeric: tabular-nums; }
+.chart .ax { fill: var(--text2); font-size: var(--fs-rank); }
+.chart .live { fill: var(--accent); font-size: var(--fs-chart-live); font-weight: 700; }
+.chart .gap { fill: var(--text3); font-size: var(--fs-chart-gap); }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .band { fill: transparent; }
+.chart .slot:hover .band { fill: var(--hover); }
+.bx-box { fill: color-mix(in srgb, var(--text3) 24%, transparent); stroke: var(--text3); stroke-width: 1.2; }
+.bx-wh { stroke: var(--text3); stroke-width: 1.2; fill: none; }
+.bx-med { stroke: var(--text); stroke-width: 1.8; }
+.bx-out { fill: none; stroke: var(--text3); stroke-width: 1; }
+.bx-edge { fill: var(--text3); stroke: none; }
+.bx-live { stroke-dasharray: 3 2; }
+.mk { fill: var(--accent); stroke: var(--row); stroke-width: 1.5; }
+/* the label above a marker, and the rank beside a row's value */
+.tag { fill: var(--row); stroke: var(--ctl); stroke-width: 1; }
+.tag.t1 { stroke: var(--r1); } .tag.t2 { stroke: var(--r2); } .tag.t3 { stroke: var(--r3); } .tag.t4 { stroke: var(--r4); } .tag.t5 { stroke: var(--r5); }
+.chart .tv { fill: var(--text); font-size: var(--fs-chart-tag); font-weight: 650; }
+.chart .chip-num { font-size: var(--fs-rank); font-weight: 650; }
+.chart .rk1 { fill: var(--r1); } .chart .rk2 { fill: var(--r2); } .chart .rk3 { fill: var(--r3); } .chart .rk4 { fill: var(--r4); } .chart .rk5 { fill: var(--r5); }
+.chart .chip-num-boxed { fill: var(--text); font-weight: var(--fw-chip); }
+.chip-box { stroke-width: 1; }
+.cb1 { fill: color-mix(in srgb, var(--r1) var(--chip-fill-strong), transparent); stroke: color-mix(in srgb, var(--r1) var(--chip-edge), transparent); }
+.cb2 { fill: color-mix(in srgb, var(--r2) var(--chip-fill-medium), transparent); stroke: color-mix(in srgb, var(--r2) var(--chip-edge), transparent); }
+.cb3 { fill: color-mix(in srgb, var(--r3) var(--chip-fill-weak), transparent); stroke: color-mix(in srgb, var(--r3) var(--chip-edge), transparent); }
+.cb4 { fill: color-mix(in srgb, var(--r4) var(--chip-fill-medium), transparent); stroke: color-mix(in srgb, var(--r4) var(--chip-edge), transparent); }
+.cb5 { fill: color-mix(in srgb, var(--r5) var(--chip-fill-strong), transparent); stroke: color-mix(in srgb, var(--r5) var(--chip-edge), transparent); }
+/* standing boxes: the value axis stays put, the seasons scroll sideways */
+.cv { display: flex; }
+.cv-axis { flex: none; }
+.cv-scroll { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
+.cv-scroll svg { display: block; }
+/* rows (phone): the axis line stays at the top of the rows */
+.ch-axis { position: sticky; top: 0; z-index: 2; background: var(--row); }
+.ch-scroll svg { display: block; max-width: 100%; }
+
+/* ---------- short windows ---------- */
+@media (max-height: 700px) {
+  .tile-scrim { padding: 8px; }
+  .tile-head { padding-top: 8px; padding-bottom: 8px; }
+}
+
+/* ---------- phone: 640px and below (keep in step with PHONE_QUERY in js/main.js) ---------- */
+@media (max-width: 640px) {
+  .tile-scrim { padding: 0; }
+  .tile { width: 100%; height: 100%; border-radius: 0; border-width: 0; }
+  .tile-head { padding: 10px var(--gutter-phone) 8px; }
+  .tile-id h2 { font-size: var(--fs-tile-name-phone); }
+  .tile-tabs { display: none; }
+  .tile-tabsel { display: block; }
+  .tile-controls { padding: 8px var(--gutter-phone); }
+  .tile-right { margin-left: 0; }
+  .tile .btn { height: var(--phone-control-height); }
+  .tile .seg button { height: calc(var(--phone-control-height) - 2px); }
+  .tile-close { width: var(--tile-close-size-phone); height: var(--tile-close-size-phone); }
+  .tile .table-wrap, .tile .panel-msg, .tile .notice, .tile-chart { margin-left: var(--gutter-phone); margin-right: var(--gutter-phone); }
+  .tile-body { --table-max-height: var(--tile-table-height-phone); }
+  .tile-body.has-chart { --table-max-height: var(--tile-table-height-chart-phone); }
+  .tile .meta { padding-left: var(--gutter-phone); padding-right: var(--gutter-phone); }
+  .tile-chart { padding: 8px 6px 10px; }
+}

@@ -21,6 +21,7 @@ html[data-theme="dark"] {
   --ink: #1A1109;           /* text on --accent-fill */
   --err: #FF5C7A;
   --shadow: 0 8px 24px rgba(0, 0, 0, .45);
+  --scrim: rgba(8, 6, 4, .66);   /* dims the stats page behind the player tile */
 
   /* rank scale, best (1) to worst (5) */
   --r1: #5CB0FF;
@@ -47,6 +48,7 @@ html[data-theme="light"] {
   --ink: #1A1109;
   --err: #B3003B;
   --shadow: 0 8px 24px rgba(60, 40, 20, .18);
+  --scrim: rgba(42, 31, 20, .5);
 
   --r1: #0D47A1;
   --r2: #35699A;
@@ -141,6 +143,26 @@ html[data-theme="light"] {
   --chip-fill-weak: 16%;    /* step 3 */
   --chip-edge: 45%;         /* the chip's 1px edge */
   --fw-chip: 550;           /* chip digits: a little lighter than rank numbers (600) to offset the box (owner) */
+}
+
+/* ---------- player tile (panel over the stats page) ---------- */
+:root {
+  --tile-width: 1260px;
+  --tile-max-height: 880px;
+  --tile-margin: 20px;           /* the dimmed page that stays visible around the tile */
+  --tile-radius: 8px;
+  --tile-pad: 16px;
+  --fs-tile-name: 22px;
+  --fs-tile-name-phone: 19px;
+  --tile-close-size: 32px;
+  --tile-close-size-phone: 36px;
+  --tile-table-height: clamp(200px, 60vh, 640px);   /* the season table's own scroll area, without and with the chart below it */
+  --tile-table-height-chart: clamp(150px, 24vh, 280px);
+  --tile-table-height-phone: 52vh;
+  --tile-table-height-chart-phone: 38vh;
+  --fs-chart-tag: 10px;
+  --fs-chart-live: 9px;
+  --fs-chart-gap: 11px;
 }
 
 /* ---------- Hardwood: court markings ---------- */

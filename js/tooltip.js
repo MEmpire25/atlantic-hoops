@@ -1,6 +1,6 @@
 // Header tooltip. Opens on hover or keyboard focus of a header; the small "i" button (click or Enter) pins it and moves
 // focus to its glossary link. Esc closes it and returns focus to the button.
-import { escapeHtml, glossaryLink } from './text.js?v=80bd9a41d5';
+import { escapeHtml, glossaryLink } from './text.js?v=19dd9c9ac6';
 
 const HIDE_DELAY_MS = 180;   // lets the pointer travel from the header to the tooltip without it closing
 

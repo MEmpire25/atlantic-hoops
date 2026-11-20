@@ -1,26 +1,27 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason, loadSeasons } from './data.js?v=80bd9a41d5';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=80bd9a41d5';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=80bd9a41d5';
-import { naturalSortDirection, sortRows } from './sorting.js?v=80bd9a41d5';
+import { loadManifest, loadGlossary, loadSeason, loadSeasons } from './data.js?v=19dd9c9ac6';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=19dd9c9ac6';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=19dd9c9ac6';
+import { naturalSortDirection, sortRows } from './sorting.js?v=19dd9c9ac6';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=80bd9a41d5';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=80bd9a41d5';
-import { tableHtml } from './table.js?v=80bd9a41d5';
-import { fitColumns } from './measure.js?v=80bd9a41d5';
-import { buildTabs, updateTabs } from './tabs.js?v=80bd9a41d5';
-import { pickerHtml, pickerLabel } from './picker.js?v=80bd9a41d5';
-import { loadingHtml, errorHtml, noResultsHtml, noMinSeasonsHtml, emptyTabHtml, busyHtml, busyErrorHtml } from './panels.js?v=80bd9a41d5';
-import { setUpTooltip } from './tooltip.js?v=80bd9a41d5';
-import { setUpHint } from './hint.js?v=80bd9a41d5';
-import { aggregateSeasons } from './multi.js?v=80bd9a41d5';
-import { MULTI_NOTE_HTML, SEASONS_KEY, SEASONS_COLUMN, SEASONS_ENTRY } from './multi-copy.js?v=80bd9a41d5';
-import { checklistHtml, seasonButtonLabel, seasonButtonTip } from './season-list.js?v=80bd9a41d5';
-import { escapeHtml } from './text.js?v=80bd9a41d5';
+} from './columns.js?v=19dd9c9ac6';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=19dd9c9ac6';
+import { tableHtml } from './table.js?v=19dd9c9ac6';
+import { fitColumns } from './measure.js?v=19dd9c9ac6';
+import { buildTabs, updateTabs, wireTabKeys } from './tabs.js?v=19dd9c9ac6';
+import { pickerHtml, pickerLabel } from './picker.js?v=19dd9c9ac6';
+import { loadingHtml, errorHtml, noResultsHtml, noMinSeasonsHtml, emptyTabHtml, busyHtml, busyErrorHtml } from './panels.js?v=19dd9c9ac6';
+import { setUpTooltip } from './tooltip.js?v=19dd9c9ac6';
+import { setUpHint } from './hint.js?v=19dd9c9ac6';
+import { aggregateSeasons } from './multi.js?v=19dd9c9ac6';
+import { MULTI_NOTE_HTML, SEASONS_KEY, SEASONS_COLUMN, SEASONS_ENTRY } from './multi-copy.js?v=19dd9c9ac6';
+import { checklistHtml, seasonButtonLabel, seasonButtonTip } from './season-list.js?v=19dd9c9ac6';
+import { escapeHtml } from './text.js?v=19dd9c9ac6';
+import { setUpPlayerTile } from './player-tile.js?v=19dd9c9ac6';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton
@@ -70,6 +71,7 @@ let latestRequest = 0;
 let seasonDraft = new Set();   // seasons ticked in the open checklist, not applied yet
 let tooltip;
 let hint;
+let playerTile;
 
 // ---------- small lookups ----------
 const typeWord = () => (state.type === 'po' ? 'playoffs' : 'regular season');
@@ -647,8 +649,9 @@ function syncRankModeControls() {
   document.body.classList.toggle('percentile-mode', state.rankMode === 'percentile');
 }
 
-function pickColumns(action) {
-  const tab = findTab(manifest, state.tab);   // the full tab: a Default or All pick also covers columns Multi hides
+// `tabName` is the table's own tab, or the player tile's (it shares the choice).
+function pickColumns(action, tabName = state.tab) {
+  const tab = findTab(manifest, tabName);   // the full tab: a Default or All pick also covers columns Multi hides
   const wanted = (column) => action === 'all' || (action === 'default' && column.default_visible);
   state.picks.set(tab.name, new Set(tab.columns.filter(wanted).map((column) => column.key)));
   // None hides the player-info columns too (only Player stays); Default and All bring them back.
@@ -670,15 +673,7 @@ function wireTabs() {
     const button = event.target.closest('[data-tab]');
     if (button) setTab(button.dataset.tab);
   });
-  $('tabs').addEventListener('keydown', (event) => {   // arrow keys move between tabs
-    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
-    if (!step) return;
-    event.preventDefault();
-    const index = manifest.tabs.findIndex((tab) => tab.name === state.tab);
-    const next = (index + step + manifest.tabs.length) % manifest.tabs.length;
-    setTab(manifest.tabs[next].name);
-    $('tabs').children[next].focus();
-  });
+  wireTabKeys($('tabs'), manifest.tabs, () => state.tab, setTab);
   $('tab-select').addEventListener('change', (event) => setTab(event.target.value));
 }
 
@@ -785,6 +780,12 @@ function wireTable() {
   $('grid').addEventListener('click', (event) => {
     const header = event.target.closest('[data-sort]');
     if (header) sortBy(header.dataset.sort);
+    const playerLink = event.target.closest('[data-player]');
+    const opensNewTab = event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0;
+    if (playerLink && !opensNewTab) {
+      event.preventDefault();
+      playerTile.open(playerLink.dataset.player, playerLink);
+    }
   });
   $('panel').addEventListener('click', (event) => {   // the message panels and the Multi loading overlay
     const jump = event.target.closest('[data-switch-season]');
@@ -834,6 +835,8 @@ function installTestHook() {
     select: (entityId, on = true) => toggleSelected(entityId, season.cols.Player[season.id.indexOf(entityId)], on),   // a player of the season on screen
     setCompare,
     showAll,
+    openPlayer: (entityId) => playerTile.open(entityId, null),
+    playerTile: () => playerTile.state(),
     data: () => (season ? { id: season.id, cols: season.cols, contributed: season.contributed ? Object.fromEntries([...season.contributed].map(([key, counts]) => [key, Array.from(counts)])) : null } : null),   // every cell of the data on screen (all columns, all players)
     rankOf: (entityId, key) => numberOver(entityId, key, lookupRank),
     percentileOf: (entityId, key) => numberOver(entityId, key, lookupPercentile),
@@ -869,7 +872,7 @@ async function start() {
 
   const requestedTab = new URLSearchParams(location.search).get('tab');   // the glossary links back with ?tab=
   state.tab = findTab(manifest, requestedTab) ? requestedTab : manifest.tabs[0].name;
-  buildTabs($('tabs'), $('tab-select'), manifest.tabs);
+  buildTabs($('tabs'), $('tab-select'), manifest.tabs, 'tab');
   $('panel').setAttribute('aria-labelledby', `tab-${manifest.tabs.findIndex((tab) => tab.name === state.tab)}`);
 
   tooltip = setUpTooltip($('tip'), $('grid'), (key) => ({
@@ -883,11 +886,28 @@ async function start() {
   wireSeasonList();
   wirePicker();
   wireTable();
+  playerTile = setUpPlayerTile({
+    manifest,
+    columnsByKey,
+    bannerTitles,
+    infoColumns: singleInfoColumns,
+    isPhone: () => phone.matches,
+    // The tile opens on the tab and season type the visitor is looking at, and shares the rank mode and the column choice.
+    tab: () => state.tab,
+    type: () => state.type,
+    rankMode: () => state.rankMode,
+    setRankMode,
+    picksOf: (tabName) => picksOf(findTab(manifest, tabName)),
+    infoPicksOf: (tabName) => infoPicksOf(findTab(manifest, tabName)),
+    picksChanged: () => { renderPicker(); renderResults(); },
+    pickColumns,
+  });
   installTestHook();
   setFiltersOpen(false);
   syncRankModeControls();
 
   state.season = manifest.seasons.rs[0];
+  playerTile.showFromUrl();   // a link with ?player=<id> opens the page with the tile open
   await showSelection();
   document.body.dataset.ready = 'true';
 }

@@ -15,9 +15,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/tokens.css?v=80bd9a41d5">
-<link rel="stylesheet" href="css/site.css?v=80bd9a41d5">
-<script src="js/theme.js?v=80bd9a41d5"></script>
+<link rel="stylesheet" href="css/tokens.css?v=19dd9c9ac6">
+<link rel="stylesheet" href="css/site.css?v=19dd9c9ac6">
+<link rel="stylesheet" href="css/player-tile.css?v=19dd9c9ac6">
+<script src="js/theme.js?v=19dd9c9ac6"></script>
 </head>
 <body class="filters-closed">
 <header class="top">
@@ -83,7 +84,7 @@
     <button type="button" class="btn" id="compare-btn" disabled title="Tick at least 2 players to compare">Compare (0)</button>
     <div class="picker-wrap">
       <button type="button" class="btn" id="picker-btn" aria-expanded="false" aria-controls="picker">Columns</button>
-      <div id="picker" role="group" aria-label="Choose columns for this tab" hidden>
+      <div id="picker" class="picker-pop" role="group" aria-label="Choose columns for this tab" hidden>
         <div class="pk-actions">
           <button type="button" data-pick-action="default">Default</button>
           <button type="button" data-pick-action="all">All</button>
@@ -119,6 +120,56 @@
 <div id="tip" role="region" aria-label="Column help" hidden></div>
 <div id="hint" role="status" hidden></div>
 
-<script type="module" src="js/main.js?v=80bd9a41d5"></script>
+<!-- Player tile: opened by a click on a player's name (js/player-tile.js fills it) -->
+<div id="tile-scrim" class="tile-scrim" hidden>
+  <section class="tile" id="tile" role="dialog" aria-modal="true" aria-labelledby="tile-name" tabindex="-1">
+    <header class="tile-head">
+      <div class="tile-id"><h2 id="tile-name"></h2><dl class="tile-facts" id="tile-facts"></dl></div>
+      <div class="tile-actions">
+        <button type="button" class="btn" id="tile-copy">Copy link</button>
+        <button type="button" class="tile-close" id="tile-close" aria-label="Close player tile"><svg viewBox="0 0 14 14" aria-hidden="true" focusable="false"><path d="M2 2l10 10M12 2L2 12"/></svg></button>
+      </div>
+    </header>
+    <div id="tile-state" class="panel-msg" role="status" hidden></div>
+    <div class="tile-main" id="tile-main" hidden>
+      <div class="tile-toolbar">
+        <div class="tile-tabs" id="tile-tabs" role="tablist" aria-label="Stat categories"></div>
+        <div class="tile-controls">
+          <label class="tile-tabsel"><span class="sr-only">Category</span><select id="tile-tab-select" aria-label="Stat category"></select></label>
+          <div class="seg" role="group" aria-label="Season type">
+            <button type="button" data-tile-type="rs">Regular Season</button>
+            <button type="button" data-tile-type="po">Playoffs</button>
+          </div>
+          <div class="tile-right">
+            <div class="seg" role="group" aria-label="Show rank or percentile beside values">
+              <button type="button" data-tile-mode="rank">Rank</button>
+              <button type="button" data-tile-mode="percentile">Percentile</button>
+            </div>
+            <div class="picker-wrap">
+              <button type="button" class="btn" id="tile-picker-btn" aria-expanded="false" aria-controls="tile-picker">Columns</button>
+              <div id="tile-picker" class="picker-pop" role="group" aria-label="Choose columns for this tab" hidden>
+                <div class="pk-actions">
+                  <button type="button" data-pick-action="default">Default</button>
+                  <button type="button" data-pick-action="all">All</button>
+                  <button type="button" data-pick-action="none">None</button>
+                </div>
+                <div id="tile-picker-body"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tile-body" id="tile-body">
+        <div class="meta"><span id="tile-count" aria-live="polite"></span><span class="legend" id="tile-legend"></span></div>
+        <div class="notice" id="tile-note" role="status" hidden></div>
+        <div class="table-wrap" id="tile-table-wrap" tabindex="0" aria-label="Seasons table (scrolls sideways)"><table id="tile-grid" class="tile-grid"></table></div>
+        <div class="panel-msg" id="tile-empty" hidden></div>
+        <section class="tile-chart" id="tile-chart" hidden aria-label="Box plot by season"></section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="js/main.js?v=19dd9c9ac6"></script>
 </body>
 </html>

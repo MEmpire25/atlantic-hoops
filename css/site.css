@@ -87,7 +87,7 @@ html[data-theme="dark"] .theme-btn .icon-moon, html[data-theme="light"] .theme-b
 .chip:hover { background: var(--hover); }
 
 .picker-wrap { position: relative; }
-#picker { position: absolute; z-index: 30; right: 0; top: calc(100% + 4px); width: var(--picker-width); max-height: 60vh; overflow: auto; padding: 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: 8px; box-shadow: var(--shadow); }
+.picker-pop { position: absolute; z-index: 30; right: 0; top: calc(100% + 4px); width: var(--picker-width); max-height: 60vh; overflow: auto; padding: 10px; background: var(--panel); border: 1px solid var(--ctl); border-radius: 8px; box-shadow: var(--shadow); }
 .pk-actions { display: flex; gap: 6px; margin-bottom: 8px; }
 .pk-actions button { height: 24px; padding: 0 8px; background: none; border: 1px solid var(--ctl); border-radius: var(--radius-small); cursor: pointer; color: var(--text2); }
 .pk-group { margin: 8px 0 2px; font-size: var(--fs-label); font-weight: 600; color: var(--accent); }
@@ -191,7 +191,7 @@ body.percentile-mode .legend .rank { height: auto; margin-left: var(--chip-pad-l
 
 /* ---------- states ---------- */
 .panel-msg { margin: 0 var(--gutter); padding: 44px 16px; text-align: center; border: 1px dashed var(--ctl); border-radius: var(--radius); color: var(--text2); }
-.panel-msg h2 { margin: 0 0 6px; font-size: var(--fs-panel-title); color: var(--text); }
+.panel-msg h2, .panel-msg h3 { margin: 0 0 6px; font-size: var(--fs-panel-title); color: var(--text); }
 .panel-msg.is-error { border-color: var(--err); }
 .panel-msg.is-error h2 { color: var(--err); }
 .skeleton { margin: 0 var(--gutter); padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--radius); }
@@ -296,7 +296,7 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
   .toolbar { gap: 8px 10px; }
   #f-q { width: 130px; }
   .right-tools { margin-left: 0; }
-  #picker { position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px; width: auto; max-height: 65vh; }
+  .picker-pop { position: fixed; left: 8px; right: 8px; top: auto; bottom: 8px; width: auto; max-height: 65vh; }
   .table-wrap, .panel-msg, .skeleton { margin: 0 var(--gutter-phone); }
   .player { white-space: normal; text-overflow: clip; }
   #tabs { display: none !important; }   /* the dropdown replaces the tab row, so the active tab is always visible */
@@ -319,5 +319,5 @@ footer { padding: 10px var(--gutter) 28px; color: var(--text2); font-size: var(-
   .sp-foot { margin-top: 6px; }
   .sp-foot .btn { flex: 1; }
   .sp-foot .link-btn { padding: 12px 8px; font-size: var(--fs-phone-control); }
-  #picker { z-index: 40; }
+  .picker-pop { z-index: 40; }
 }
