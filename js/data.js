@@ -2,7 +2,7 @@
 // one player file, and one box file per column it draws), and each file is fetched once: later requests reuse the cached
 // promise (player files are the one exception, see loadPlayer). URLs are relative so the site works from a sub-path
 // (GitHub Pages project site).
-import { normalizeForSearch } from './text.js?v=19dd9c9ac6';
+import { normalizeForSearch } from './text.js?v=a8a25cf21f';
 
 const cache = new Map();
 

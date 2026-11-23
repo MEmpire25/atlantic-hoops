@@ -9,22 +9,26 @@
 //
 // `host` is what the tile shares with the stats page (main.js): the manifest and column lookups, the tab, season type,
 // rank mode and column choice the visitor already made, and the phone breakpoint.
-import { loadPlayer, loadBoxes } from './data.js?v=19dd9c9ac6';
-import { findTab } from './columns.js?v=19dd9c9ac6';
-import { buildTabs, updateTabs, wireTabKeys } from './tabs.js?v=19dd9c9ac6';
-import { pickerHtml, pickerLabel } from './picker.js?v=19dd9c9ac6';
-import { naturalSortDirection, sortRows } from './sorting.js?v=19dd9c9ac6';
-import { playerCellRanking } from './ranks.js?v=19dd9c9ac6';
-import { BLANK_MARK } from './table.js?v=19dd9c9ac6';
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
-import { playerTableHtml } from './player-table.js?v=19dd9c9ac6';
-import { drawBoxChart, chartKeyHtml } from './box-chart.js?v=19dd9c9ac6';
-import { SEASON_TYPE_NAME, SEASON_COUNT_WORD, NO_VALUES_NOTICE } from './player-copy.js?v=19dd9c9ac6';
+import { loadPlayer, loadBoxes } from './data.js?v=a8a25cf21f';
+import { findTab } from './columns.js?v=a8a25cf21f';
+import { buildTabs, updateTabs, wireTabKeys } from './tabs.js?v=a8a25cf21f';
+import { pickerHtml, pickerLabel } from './picker.js?v=a8a25cf21f';
+import { naturalSortDirection, sortRows } from './sorting.js?v=a8a25cf21f';
+import { playerCellRanking } from './ranks.js?v=a8a25cf21f';
+import { BLANK_MARK } from './table.js?v=a8a25cf21f';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
+import { playerTableHtml } from './player-table.js?v=a8a25cf21f';
+import { drawBoxChart, chartKeyHtml } from './box-chart.js?v=a8a25cf21f';
+import { SEASON_TYPE_NAME, SEASON_COUNT_WORD, NO_VALUES_NOTICE } from './player-copy.js?v=a8a25cf21f';
 
 const PLAYER_PARAM = 'player';
 const SEASON_KEY = 'Season';
 const RESIZE_DELAY_MS = 120;
 const COPIED_MESSAGE_MS = 1500;
+const PICKER_GAP_PX = 4;              // the picker sits this far under the Columns button (site.css)
+const PICKER_BOTTOM_MARGIN_PX = 12;   // and stops this far above the tile's bottom edge
+const PICKER_MIN_HEIGHT_PX = 160;
+const TABLE_FLOOR_PX = 200;           // the least height the table is squeezed to beside the chart in tall windows
 const NO_EMPTY_COLUMNS = new Set();   // the tile shows every column the visitor picked, with dashes where the player has no value
 
 const $ = (id) => document.getElementById(id);
@@ -179,6 +183,17 @@ export function setUpPlayerTile(host) {
   function setPickerOpen(isOpen) {
     $('tile-picker').hidden = !isOpen;
     $('tile-picker-btn').setAttribute('aria-expanded', String(isOpen));
+    fitPickerToTile();
+  }
+
+  // The tile clips what sticks out of it, so the open picker may be no taller than the room left under the Columns button
+  // (it scrolls inside if its list is longer). On a phone the picker is a bottom sheet with its own limit in site.css.
+  function fitPickerToTile() {
+    const picker = $('tile-picker');
+    picker.style.maxHeight = '';
+    if (picker.hidden || host.isPhone()) return;
+    const roomBelowButton = $('tile').getBoundingClientRect().bottom - $('tile-picker-btn').getBoundingClientRect().bottom - PICKER_GAP_PX - PICKER_BOTTOM_MARGIN_PX;
+    picker.style.maxHeight = `${Math.max(PICKER_MIN_HEIGHT_PX, Math.floor(roomBelowButton))}px`;
   }
 
   const closePicker = () => setPickerOpen(false);
@@ -211,6 +226,22 @@ export function setUpPlayerTile(host) {
     const seasonsAsRows = block.seasons.map((unused, index) => index);   // already newest first
     const rows = sort ? sortRows(seasonsAsRows, block, host.columnsByKey.get(sort.key), sort.direction) : seasonsAsRows;
     $('tile-grid').innerHTML = playerTableHtml({ columns, block, rows, sort, mode: host.rankMode(), inProgressSeason: host.manifest.in_progress[type] });
+    fitTableFloor();
+  }
+
+  // In tall windows with the chart shown, the table may shrink to 200px to leave room for the chart; a table that needs less
+  // keeps its own height, or its frame would show blank rows (the floor is read in player-tile.css). What the frame needs is
+  // the rows plus what surrounds them: its border and, in a narrow window, the horizontal scrollbar (offsetHeight minus
+  // clientHeight; a vertical scrollbar does not count). That sum is only right when the layout has settled: a frame that
+  // shrinks to a too-small floor gains a horizontal scrollbar and scrolls inside itself, so the floor is raised once by what
+  // the frame then misses. It runs again once the chart is drawn, because the chart is what makes the frame short.
+  function fitTableFloor() {
+    const frame = $('tile-table-wrap');
+    if (frame.hidden) return;
+    const setFloor = (pixels) => frame.style.setProperty('--table-floor', `${Math.min(TABLE_FLOOR_PX, pixels)}px`);
+    const floor = $('tile-grid').offsetHeight + frame.offsetHeight - frame.clientHeight;
+    setFloor(floor);
+    setFloor(floor + Math.max(0, frame.scrollHeight - frame.clientHeight));   // reading the sizes applies the first floor
   }
 
   // ---------- chart ----------
@@ -286,6 +317,7 @@ export function setUpPlayerTile(host) {
       noRank: column.rank === 'none',
       noLeagueSeasons: withoutLeagueData > 0 ? { count: withoutLeagueData, of: entries.length } : null,
     });
+    fitTableFloor();
   }
 
   // What the drawing depends on: its width, and on wide screens the window height too. A resize that changes neither keeps the chart.
@@ -294,7 +326,7 @@ export function setUpPlayerTile(host) {
   }
 
   function redrawChartIfLayoutChanged() {
-    if (status === 'ready' && drawnChartLayout !== null && chartLayout(host.isPhone()) !== drawnChartLayout) renderChart();
+    if (status === 'ready' && drawnChartLayout !== null && chartLayout(host.isPhone()) !== drawnChartLayout) return renderChart();
   }
 
   // ---------- rendering ----------
@@ -314,7 +346,10 @@ export function setUpPlayerTile(host) {
   function refresh() {
     renderControls();
     renderTable();
-    renderChart();
+    // The chart is drawn after its data arrives and the tile (content-height in tall windows) grows with it, so the picker is
+    // fitted once that has happened; fitting earlier would measure the tile while the chart is still empty and too short.
+    // This also covers the toolbar wrapping differently after a choice, which moves the Columns button.
+    renderChart().then(fitPickerToTile);
   }
 
   // ---------- events ----------
@@ -392,7 +427,8 @@ export function setUpPlayerTile(host) {
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(redrawChartIfLayoutChanged, RESIZE_DELAY_MS);
+    // The picker is fitted once a redrawn chart has settled the tile's height (see refresh).
+    resizeTimer = setTimeout(async () => { const redrawn = redrawChartIfLayoutChanged(); fitTableFloor(); await redrawn; fitPickerToTile(); }, RESIZE_DELAY_MS);
   });
 
   return {

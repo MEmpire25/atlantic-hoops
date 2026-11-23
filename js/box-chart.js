@@ -13,9 +13,9 @@
 //   marker:    null, or { value, rank, percentile, number, step }: the player's value, and the rank or percentile to show
 //              (`number`, colored by `step`) which is null for columns without a rank direction,
 // }
-import { formatValue } from './format.js?v=19dd9c9ac6';
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
-import { IN_PROGRESS_LABEL } from './player-copy.js?v=19dd9c9ac6';
+import { formatValue } from './format.js?v=a8a25cf21f';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
+import { IN_PROGRESS_LABEL } from './player-copy.js?v=a8a25cf21f';
 
 const MINUS = '−';
 const FALLBACK_WIDTH = 600;
@@ -31,7 +31,7 @@ const MAX_SLOT = 72;
 const PLOT_TOP = 54;              // room for the tallest label (35 above its marker) with a margin
 const PLOT_BOTTOM = 44;           // season label and "in progress"
 const PLOT_HEIGHT_MIN = 260;
-const PLOT_HEIGHT_MAX = 340;
+const PLOT_HEIGHT_MAX = 400;      // reached in a window about 1050px tall
 const PLOT_HEIGHT_SHARE = 0.38;   // of the window height, between the two limits above
 const BOX_WIDTH_MAX = 24;
 const BOX_WIDTH_SHARE = 0.46;     // of a season's slot

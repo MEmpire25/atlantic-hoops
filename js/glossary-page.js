@@ -1,10 +1,10 @@
 // Glossary page. One section per stats tab, in tab order. Columns with a glossary text get a full entry; the others
 // (the self-evident ones) are listed compactly with their tooltip. Every column has an anchor, so every header
 // tooltip on the stats page can link to the right place. All text comes from glossary.json.
-import { loadManifest, loadGlossary } from './data.js?v=19dd9c9ac6';
-import { indexColumnsByKey, indexBannerTitles } from './columns.js?v=19dd9c9ac6';
-import { escapeHtml, columnAnchorId } from './text.js?v=19dd9c9ac6';
-import { MULTI_GLOSSARY, MULTI_ANCHOR } from './multi-copy.js?v=19dd9c9ac6';
+import { loadManifest, loadGlossary } from './data.js?v=a8a25cf21f';
+import { indexColumnsByKey, indexBannerTitles } from './columns.js?v=a8a25cf21f';
+import { escapeHtml, columnAnchorId } from './text.js?v=a8a25cf21f';
+import { MULTI_GLOSSARY, MULTI_ANCHOR } from './multi-copy.js?v=a8a25cf21f';
 
 const byName = (a, b) => a.name.localeCompare(b.name);
 

@@ -9,11 +9,11 @@
 //   mode:             'rank' or 'percentile': which number sits beside each value,
 //   inProgressSeason: label of the season still being played, or null
 // }
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
-import { formatValue } from './format.js?v=19dd9c9ac6';
-import { playerCellRanking } from './ranks.js?v=19dd9c9ac6';
-import { BLANK_MARK, creditTagHtml, headerNameHtml, rankChipHtml } from './table.js?v=19dd9c9ac6';
-import { IN_PROGRESS_LABEL } from './player-copy.js?v=19dd9c9ac6';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
+import { formatValue } from './format.js?v=a8a25cf21f';
+import { playerCellRanking } from './ranks.js?v=a8a25cf21f';
+import { BLANK_MARK, creditTagHtml, headerNameHtml, rankChipHtml } from './table.js?v=a8a25cf21f';
+import { IN_PROGRESS_LABEL } from './player-copy.js?v=a8a25cf21f';
 
 const SEASON_KEY = 'Season';
 

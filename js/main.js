@@ -1,27 +1,27 @@
 // Stats page. The flow, top to bottom:
 //   load data (data.js) -> apply filters (filters.js) -> compute ranks (ranks.js) -> sort (sorting.js) -> render (table.js)
 // This file holds the page state and connects the controls to that flow.
-import { loadManifest, loadGlossary, loadSeason, loadSeasons } from './data.js?v=19dd9c9ac6';
-import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=19dd9c9ac6';
-import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=19dd9c9ac6';
-import { naturalSortDirection, sortRows } from './sorting.js?v=19dd9c9ac6';
+import { loadManifest, loadGlossary, loadSeason, loadSeasons } from './data.js?v=a8a25cf21f';
+import { emptyFilters, activeFilterNames, chipLabel, filterRows } from './filters.js?v=a8a25cf21f';
+import { buildRankTable, buildRankTables, lookupRank, lookupPercentile, widestNumberDigits } from './ranks.js?v=a8a25cf21f';
+import { naturalSortDirection, sortRows } from './sorting.js?v=a8a25cf21f';
 import {
   indexColumnsByKey, indexBannerTitles, findTab, defaultPicks, emptyColumnKeys, tabIsEmpty,
   newestSeasonWithData, splitPickedColumns, sourceTag,
-} from './columns.js?v=19dd9c9ac6';
-import { rowsOfSelected, namesNotInSeason } from './compare.js?v=19dd9c9ac6';
-import { tableHtml } from './table.js?v=19dd9c9ac6';
-import { fitColumns } from './measure.js?v=19dd9c9ac6';
-import { buildTabs, updateTabs, wireTabKeys } from './tabs.js?v=19dd9c9ac6';
-import { pickerHtml, pickerLabel } from './picker.js?v=19dd9c9ac6';
-import { loadingHtml, errorHtml, noResultsHtml, noMinSeasonsHtml, emptyTabHtml, busyHtml, busyErrorHtml } from './panels.js?v=19dd9c9ac6';
-import { setUpTooltip } from './tooltip.js?v=19dd9c9ac6';
-import { setUpHint } from './hint.js?v=19dd9c9ac6';
-import { aggregateSeasons } from './multi.js?v=19dd9c9ac6';
-import { MULTI_NOTE_HTML, SEASONS_KEY, SEASONS_COLUMN, SEASONS_ENTRY } from './multi-copy.js?v=19dd9c9ac6';
-import { checklistHtml, seasonButtonLabel, seasonButtonTip } from './season-list.js?v=19dd9c9ac6';
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
-import { setUpPlayerTile } from './player-tile.js?v=19dd9c9ac6';
+} from './columns.js?v=a8a25cf21f';
+import { rowsOfSelected, namesNotInSeason } from './compare.js?v=a8a25cf21f';
+import { tableHtml } from './table.js?v=a8a25cf21f';
+import { fitColumns } from './measure.js?v=a8a25cf21f';
+import { buildTabs, updateTabs, wireTabKeys } from './tabs.js?v=a8a25cf21f';
+import { pickerHtml, pickerLabel } from './picker.js?v=a8a25cf21f';
+import { loadingHtml, errorHtml, noResultsHtml, noMinSeasonsHtml, emptyTabHtml, busyHtml, busyErrorHtml } from './panels.js?v=a8a25cf21f';
+import { setUpTooltip } from './tooltip.js?v=a8a25cf21f';
+import { setUpHint } from './hint.js?v=a8a25cf21f';
+import { aggregateSeasons } from './multi.js?v=a8a25cf21f';
+import { MULTI_NOTE_HTML, SEASONS_KEY, SEASONS_COLUMN, SEASONS_ENTRY } from './multi-copy.js?v=a8a25cf21f';
+import { checklistHtml, seasonButtonLabel, seasonButtonTip } from './season-list.js?v=a8a25cf21f';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
+import { setUpPlayerTile } from './player-tile.js?v=a8a25cf21f';
 
 const PHONE_QUERY = '(max-width: 640px)';   // keep in step with the @media rule at the end of css/site.css
 const LOADING_DELAY_MS = 150;                // a cached or fast file never flashes the loading skeleton

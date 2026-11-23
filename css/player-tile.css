@@ -52,6 +52,26 @@ tbody tr:hover > .season-col { box-shadow: inset var(--hover-edge) 0 0 var(--acc
 body.percentile-mode .tile-grid { --rank-slot-1: calc(.62em + 2px); --rank-slot-2: calc(1.24em + 2px); --rank-slot-3: calc(1.86em + 2px); --rank-slot-4: calc(2.48em + 2px); }
 .tile .notice, .tile .panel-msg { margin-top: 4px; }
 
+/* ---------- large screens: the table uses the extra height, the picker shows its columns in three ---------- */
+@media (min-width: 641px) {
+  /* The tile's picker only: the stats page's picker keeps its single 290px column. The checkboxes sit in #tile-picker-body,
+     so that is the grid; group headings and the gap span all three columns. */
+  #tile-picker { width: var(--tile-picker-width); }
+  #tile-picker-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 14px; align-content: start; }
+  #tile-picker-body > .pk-group, #tile-picker-body > .pk-gap { grid-column: 1 / -1; }
+}
+@media (min-width: 641px) and (min-height: 900px) {
+  .tile-body { --table-max-height: var(--tile-table-height-tall); }
+  /* With a chart the body becomes a column and the table takes the height the header, chart and legend leave (never under
+     200px; then the body scrolls), so no empty band is left under the chart. */
+  .tile-body.has-chart { display: flex; flex-direction: column; }
+  .tile-body.has-chart > * { flex: none; }
+  .tile-body.has-chart > .table-wrap { flex: 0 1 auto; min-height: var(--table-floor, 200px); max-height: none; }
+  /* A player with few seasons has less to show than the tile is tall: with the chart shown the tile is only as tall as its
+     content, up to the usual height (a long table then fills it as above). */
+  .tile:has(.tile-body.has-chart) { height: auto; max-height: min(100%, var(--tile-max-height)); }
+}
+
 /* ---------- chart ---------- */
 .tile-chart { margin: 12px var(--gutter) 0; padding: 10px 10px 10px; background: var(--row); border: 1px solid var(--line); border-radius: var(--table-radius); }
 .c-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin-bottom: 4px; }

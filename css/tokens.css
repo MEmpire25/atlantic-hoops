@@ -147,8 +147,8 @@ html[data-theme="light"] {
 
 /* ---------- player tile (panel over the stats page) ---------- */
 :root {
-  --tile-width: 1260px;
-  --tile-max-height: 880px;
+  --tile-width: min(max(1260px, 75vw), 1360px);        /* grows with a wide window; 1260px in a normal one */
+  --tile-max-height: min(max(880px, 94vh), 1050px);    /* the same for height; a short window keeps 880px */
   --tile-margin: 20px;           /* the dimmed page that stays visible around the tile */
   --tile-radius: 8px;
   --tile-pad: 16px;
@@ -158,6 +158,8 @@ html[data-theme="light"] {
   --tile-close-size-phone: 36px;
   --tile-table-height: clamp(200px, 60vh, 640px);   /* the season table's own scroll area, without and with the chart below it */
   --tile-table-height-chart: clamp(150px, 24vh, 280px);
+  --tile-table-height-tall: clamp(200px, 64vh, 860px);   /* the cap without a chart in a window 900px tall or more; with a chart the table takes what is left */
+  --tile-picker-width: min(660px, calc(100vw - 60px));   /* the tile's 3-column picker; in window units because its parent is only as wide as the Columns button */
   --tile-table-height-phone: 52vh;
   --tile-table-height-chart-phone: 38vh;
   --fs-chart-tag: 10px;

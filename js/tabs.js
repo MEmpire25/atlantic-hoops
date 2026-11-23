@@ -1,7 +1,7 @@
 // The category tabs: a tab row on desktop and a dropdown on phones (CSS shows one of them). The elements are created
 // once from the manifest; after that only their state is updated, so keyboard focus is never lost.
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
-import { tabIsEmpty } from './columns.js?v=19dd9c9ac6';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
+import { tabIsEmpty } from './columns.js?v=a8a25cf21f';
 
 // `idPrefix` keeps the button ids unique when a second tab row exists (the player tile has its own).
 export function buildTabs(tabsRow, tabSelect, tabs, idPrefix) {

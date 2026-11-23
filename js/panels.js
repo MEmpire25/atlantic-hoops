@@ -1,5 +1,5 @@
 // Messages shown in place of the table: loading, load error, no matching players, a tab with no data this season.
-import { escapeHtml } from './text.js?v=19dd9c9ac6';
+import { escapeHtml } from './text.js?v=a8a25cf21f';
 
 const SKELETON_ROWS = 10;
 
